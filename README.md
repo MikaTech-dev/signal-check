@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SafeRoute Signal: AI-Powered Community Safety & Road Verification
 
-## Getting Started
+> Built for the Screening Challenge: **"Build Something That Helps"** (Amara's 6:40 PM market closing scenario).
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 1. Problem & Scenario
+
+At 6:40 PM on the edge of a tense regional market town, Amara is closing her shop. Rumours circulate rapidly across WhatsApp groups and uncoordinated radio chatter. Panic spreads easily, but verified facts are scarce. Amara needs to know right now whether the road home is safe, and she needs to trust what she is told.
+
+**SafeRoute Signal** uses **DeepSeek Flash** to extract verified facts from unstructured community noise, separating direct eyewitness observations from hearsay and panic forwards, and calculating real-time road corridor safety consensus.
+
+---
+
+## 2. Key Architecture & Modules
+
+```
+src/
+├── types/
+│   └── index.ts                 # Type definitions (Reports, Routes, AI Analysis)
+├── lib/
+│   ├── deepseek.ts              # DeepSeek API integration with zero-failure fallback
+│   ├── mockData.ts              # Realistic regional seed data & 1-click test scenarios
+│   ├── utils.ts                 # Status tokens, formatting, and accessibility helpers
+│   └── __tests__/
+│       └── signalCheck.test.ts  # Vitest unit test suite for business & extraction logic
+├── components/
+│   ├── ui/                      # Accessible design primitives (Button, Badge, Card, Modal)
+│   ├── layout/                  # Context Header with live market time & accessible TabNav
+│   ├── dashboard/               # Amara's 6:40 PM Decision Card, Corridor Grid, Evidence Modal
+│   └── reports/                 # Raw WhatsApp/Radio ingest, AI fact breakdown, Signal stream
+└── app/
+    ├── api/analyze/route.ts     # Next.js Server Route for DeepSeek Flash
+    ├── layout.tsx               # Root layout & meta tags
+    ├── page.tsx                 # Main application dashboard
+    └── globals.css              # Accessible high-contrast theme tokens
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 3. Setup & Environment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env.local` file in the root directory:
 
-## Learn More
+```bash
+NEXT_PUBLIC_DEEPSEEK_API_KEY=your_deepseek_api_key_here
+```
 
-To learn more about Next.js, take a look at the following resources:
+*(Note: The system also includes an intelligent local heuristic analysis fallback, ensuring complete functionality even without an active key or during offline review).*
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 4. Commands
 
-## Deploy on Vercel
+### Run Unit Tests
+```bash
+npm test
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Production Build
+```bash
+npm run build
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Start Development Server
+```bash
+npm run dev
+```
+
+---
+
+## 5. Antislop & UX Standards Applied
+- **Truth over Hype**: Zero fabricated statistics or generic AI testimonials.
+- **Copywriting Hygiene**: No em dashes (`—`), no empty buzzwords, clear human phrasing.
+- **Accessibility**: WCAG AA color contrast, minimum 44px touch targets, full keyboard operability (`Escape` for modals, logical `Tab` navigation).
+- **Resilience**: Complete handling for empty, loading, error, and offline states.

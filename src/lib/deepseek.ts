@@ -102,7 +102,12 @@ export function heuristicFallbackAnalysis(rawText: string): AiAnalysisResult {
     incidentType = 'Patrol Radio Advisory';
     reasoning = 'Official community patrol or vigilante radio dispatch.';
   } else if (isHearsay) {
-    sourceType = textLower.includes('whatsapp') ? 'UNVERIFIED_WHATSAPP' : 'HEARSAY_RUMOR';
+    sourceType =
+      textLower.includes('whatsapp') ||
+      textLower.includes('share') ||
+      textLower.includes('forward')
+        ? 'UNVERIFIED_WHATSAPP'
+        : 'HEARSAY_RUMOR';
     isFirsthand = false;
     confidence = 25;
     needsReview = true;
