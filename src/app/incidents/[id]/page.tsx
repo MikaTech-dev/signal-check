@@ -26,26 +26,33 @@ export default function IncidentDetailPage({
 
   if (!loaded) {
     return (
-      <div className="p-8 text-xs text-[#737373] text-center">
-        Loading crisis telemetry...
+      <div className="min-h-[50dvh] flex flex-col items-center justify-center space-y-3">
+        <div className="w-8 h-8 rounded-full border-2 border-black/10 border-t-[#0A0A0A] animate-spin" />
+        <p className="text-xs font-semibold text-[#737373] tracking-wide uppercase">
+          Loading crisis telemetry...
+        </p>
       </div>
     );
   }
 
   if (!incident) {
     return (
-      <div className="p-8 text-center bg-white border border-[#E7E5E4] rounded-lg space-y-3">
-        <h2 className="text-sm font-bold text-[#0A0A0A]">Incident Not Found</h2>
-        <p className="text-xs text-[#737373]">
-          The incident #{resolvedParams.id} may have expired or been merged.
-        </p>
-        <Link
-          href="/nearby"
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded bg-[#0A0A0A] text-[#FAFAF9] text-xs font-bold"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Nearby Feeds</span>
-        </Link>
+      <div className="max-w-md mx-auto my-16 p-2 rounded-[2.5rem] bg-black/5 border border-black/5 shadow-xs">
+        <div className="bg-white rounded-[calc(2.5rem-0.5rem)] p-10 text-center space-y-4">
+          <h2 className="text-xl font-bold text-[#0A0A0A]">Incident Not Found</h2>
+          <p className="text-sm text-[#737373]">
+            Incident #{resolvedParams.id} may have expired or been resolved.
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/nearby"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#0A0A0A] text-white text-xs font-bold hover:bg-[#262626] transition-transform active:scale-[0.98]"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Nearby Feeds</span>
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }

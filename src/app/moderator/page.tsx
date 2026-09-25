@@ -5,11 +5,11 @@ import { toast } from 'sonner';
 import { signalStore } from '@/lib/store';
 import { adminApi } from '@/lib/api';
 import { IncidentReport } from '@/types';
-import { SlidersHorizontal, ShieldAlert, CheckCircle2, Ban } from 'lucide-react';
+import { RouteGuard } from '@/components/auth/RouteGuard';
+import { SlidersHorizontal, ShieldAlert, CheckCircle2, Ban, Check } from 'lucide-react';
 
 export default function ModeratorPage() {
   const [reports, setReports] = useState<IncidentReport[]>([]);
-  const currentUser = signalStore.getCurrentUser();
 
   const loadData = async () => {
     try {
@@ -55,111 +55,125 @@ export default function ModeratorPage() {
   };
 
   return (
-    <div className="space-y-5 max-w-3xl mx-auto text-[#0A0A0A]">
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <SlidersHorizontal className="w-5 h-5 text-[#C7862B]" />
-          <h1 className="text-lg sm:text-xl font-bold text-[#0A0A0A] tracking-tight">
-            Moderation & Viral Quarantine Queue
+    <RouteGuard mode="ROLE_PROTECTED" allowedRoles={['MODERATOR', 'ADMIN']}>
+      <div className="space-y-8 max-w-4xl mx-auto pb-16 text-[#0A0A0A]">
+        {/* Header */}
+        <div className="space-y-2 pt-4 pb-2 border-b border-[#E7E5E4]">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0A0A0A] text-white text-xs font-bold uppercase tracking-wider">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-[#C7862B]" />
+            <span>Moderator Triage Station</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#0A0A0A]">
+            Viral Quarantine & Audit Queue
           </h1>
+          <p className="text-sm text-[#57534E]">
+            DeepSeek Flash duplicate chain audits, hysteria detection, and raw telemetry inspection.
+          </p>
         </div>
-        <p className="text-xs text-[#57534E]">
-          DeepSeek Flash duplicate chain audits, panic detection, and raw telemetry inspection.
-        </p>
-      </div>
 
-      <div className="space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-[#991B1B] flex items-center gap-1.5">
-          <ShieldAlert className="w-4 h-4" />
-          <span>Quarantined Viral Chains & Hysteria Submissions ({quarantinedReports.length})</span>
-        </h3>
-
-        {quarantinedReports.length === 0 ? (
-          <div className="p-6 text-center bg-white border border-[#E7E5E4] rounded-lg text-xs text-[#737373]">
-            No quarantined reports in queue.
+        {/* Quarantined Viral Chains */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="w-5 h-5 text-[#991B1B]" />
+            <h2 className="text-xl font-bold text-[#0A0A0A]">
+              Quarantined Viral Chains ({quarantinedReports.length})
+            </h2>
           </div>
-        ) : (
-          quarantinedReports.map((report) => (
-            <div
-              key={report.id}
-              className="p-4 rounded-lg bg-white border border-rose-200 space-y-2 text-xs"
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-[#991B1B]">
-                  {report.incidentType.replace(/_/g, ' ')} &bull; Viral Match {report.triageAudit.duplicateChainConfidence}%
-                </span>
-                <span className="text-[11px] font-mono text-[#737373]">
-                  Exact Private GPS: {report.coordinates.latitude.toFixed(4)}, {report.coordinates.longitude.toFixed(4)}
-                </span>
-              </div>
 
-              <p className="text-[#171717] bg-rose-50/40 p-2.5 rounded border border-rose-100 leading-relaxed font-mono">
-                {report.rawText}
-              </p>
-
-              <p className="text-[11px] text-[#991B1B] font-semibold">
-                Reason: {report.triageAudit.quarantineReason || report.triageAudit.triageNotes}
-              </p>
-
-              <div className="flex justify-end gap-2 pt-2 border-t border-[#F5F5F4]">
-                <button
-                  onClick={() => handleApprove(report.id)}
-                  className="px-3 py-1.5 rounded border border-[#D6D3D1] hover:bg-[#F5F5F4] text-xs font-bold flex items-center gap-1"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Release Quarantine & Approve</span>
-                </button>
-              </div>
+          {quarantinedReports.length === 0 ? (
+            <div className="p-8 text-center bg-white border border-[#E7E5E4] rounded-2xl text-sm text-[#737373]">
+              No viral chains currently quarantined in your queue.
             </div>
-          ))
-        )}
-      </div>
-
-      <div className="space-y-3 pt-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-[#737373]">
-          Pending Telemetry Submissions ({pendingReports.length})
-        </h3>
-
-        {pendingReports.length === 0 ? (
-          <div className="p-6 text-center bg-white border border-[#E7E5E4] rounded-lg text-xs text-[#737373]">
-            All submitted reports audited.
-          </div>
-        ) : (
-          pendingReports.map((report) => (
-            <div
-              key={report.id}
-              className="p-4 rounded-lg bg-white border border-[#E7E5E4] space-y-2 text-xs"
-            >
-              <div className="flex items-center justify-between font-bold">
-                <span>{report.incidentType.replace(/_/g, ' ')}</span>
-                <span className="font-mono text-[#737373]">
-                  Completeness: {report.triageAudit.completenessScore}/100
-                </span>
-              </div>
-
-              <p className="text-[#171717] bg-[#FAFAF9] p-2.5 rounded border border-[#F5F5F4] leading-relaxed">
-                {report.rawText}
-              </p>
-
-              <div className="flex justify-end gap-2 pt-1">
-                <button
-                  onClick={() => handleQuarantine(report.id)}
-                  className="px-3 py-1.5 rounded border border-rose-200 text-[#991B1B] hover:bg-rose-50 text-xs font-bold flex items-center gap-1"
+          ) : (
+            <div className="space-y-4">
+              {quarantinedReports.map((report) => (
+                <article
+                  key={report.id}
+                  className="bg-white border border-rose-200 rounded-[2rem] p-6 sm:p-8 space-y-4 shadow-xs"
                 >
-                  <Ban className="w-3.5 h-3.5" />
-                  <span>Quarantine</span>
-                </button>
-                <button
-                  onClick={() => handleApprove(report.id)}
-                  className="px-3 py-1.5 rounded bg-[#0A0A0A] text-[#FAFAF9] text-xs font-bold"
-                >
-                  Approve Telemetry
-                </button>
-              </div>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-950 border border-rose-300">
+                      {report.incidentType.replace(/_/g, ' ')} &bull; Viral Match {report.triageAudit.duplicateChainConfidence}%
+                    </span>
+                    <span className="text-xs font-mono text-[#737373] bg-[#FAFAF9] border border-[#E7E5E4] px-2.5 py-1 rounded-full">
+                      Exact GPS: {report.coordinates.latitude.toFixed(4)}, {report.coordinates.longitude.toFixed(4)}
+                    </span>
+                  </div>
+
+                  <p className="text-base text-[#171717] bg-rose-50/50 p-5 rounded-2xl border border-rose-100 leading-relaxed font-mono text-sm">
+                    {report.rawText}
+                  </p>
+
+                  <div className="text-xs font-semibold text-[#991B1B]">
+                    Flag Reason: {report.triageAudit.quarantineReason || report.triageAudit.triageNotes}
+                  </div>
+
+                  <div className="flex justify-end pt-3 border-t border-[#F5F5F4]">
+                    <button
+                      onClick={() => handleApprove(report.id)}
+                      className="px-6 py-2.5 rounded-full bg-[#0A0A0A] text-white text-xs font-bold hover:bg-[#262626] transition-transform active:scale-[0.98] flex items-center gap-2"
+                    >
+                      <Check className="w-4 h-4 text-[#C7862B]" />
+                      <span>Release Quarantine & Approve</span>
+                    </button>
+                  </div>
+                </article>
+              ))}
             </div>
-          ))
-        )}
+          )}
+        </div>
+
+        {/* Pending Telemetry */}
+        <div className="space-y-4 pt-4">
+          <h2 className="text-xl font-bold text-[#0A0A0A]">
+            Pending Telemetry Submissions ({pendingReports.length})
+          </h2>
+
+          {pendingReports.length === 0 ? (
+            <div className="p-8 text-center bg-white border border-[#E7E5E4] rounded-2xl text-sm text-[#737373]">
+              All submitted reports have been reviewed.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {pendingReports.map((report) => (
+                <article
+                  key={report.id}
+                  className="bg-white border border-[#E7E5E4] rounded-[2rem] p-6 sm:p-8 space-y-4 shadow-xs"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#0A0A0A] text-white">
+                      {report.incidentType.replace(/_/g, ' ')}
+                    </span>
+                    <span className="text-xs font-mono font-semibold text-[#737373] bg-[#FAFAF9] border border-[#E7E5E4] px-2.5 py-1 rounded-full">
+                      Completeness: {report.triageAudit.completenessScore}/100
+                    </span>
+                  </div>
+
+                  <p className="text-base text-[#171717] bg-[#FAFAF9] p-5 rounded-2xl border border-[#F5F5F4] leading-relaxed">
+                    {report.rawText}
+                  </p>
+
+                  <div className="flex justify-end gap-3 pt-3 border-t border-[#F5F5F4]">
+                    <button
+                      onClick={() => handleQuarantine(report.id)}
+                      className="px-5 py-2.5 rounded-full border border-rose-200 text-[#991B1B] hover:bg-rose-50 text-xs font-bold flex items-center gap-1.5 transition-colors"
+                    >
+                      <Ban className="w-3.5 h-3.5" />
+                      <span>Quarantine</span>
+                    </button>
+                    <button
+                      onClick={() => handleApprove(report.id)}
+                      className="px-6 py-2.5 rounded-full bg-[#0A0A0A] text-white text-xs font-bold hover:bg-[#262626] transition-transform active:scale-[0.98]"
+                    >
+                      Approve Telemetry
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </RouteGuard>
   );
 }

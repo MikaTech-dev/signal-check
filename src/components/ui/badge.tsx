@@ -7,14 +7,15 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-zinc-100 text-zinc-800 border-zinc-200',
-        purple: 'bg-purple-50 text-purple-950 border-purple-200/80 font-semibold',
+        default: 'bg-[#F5F5F4] text-[#171717] border-[#E7E5E4]',
+        amber: 'bg-amber-50 text-amber-950 border-amber-200 font-semibold',
         success: 'bg-emerald-50 text-emerald-800 border-emerald-200',
         warning: 'bg-amber-50 text-amber-900 border-amber-200',
         danger: 'bg-rose-50 text-rose-900 border-rose-200',
-        outline: 'bg-transparent text-zinc-700 border-zinc-300',
-        secondary: 'bg-zinc-100 text-zinc-800 border-zinc-200',
+        outline: 'bg-transparent text-[#57534E] border-[#D6D3D1]',
+        secondary: 'bg-[#F5F5F4] text-[#171717] border-[#E7E5E4]',
         destructive: 'bg-rose-50 text-rose-900 border-rose-200',
+        dark: 'bg-[#0A0A0A] text-[#FAFAF9] border-[#0A0A0A] font-semibold',
       },
     },
     defaultVariants: {
@@ -37,14 +38,15 @@ export const Badge: React.FC<BadgeProps> = ({
   ...props
 }) => {
   const dotColors: Record<string, string> = {
-    default: 'bg-zinc-400',
-    purple: 'bg-purple-700',
+    default: 'bg-[#737373]',
+    amber: 'bg-[#C7862B]',
     success: 'bg-emerald-600',
     warning: 'bg-amber-500',
     danger: 'bg-rose-600',
-    outline: 'bg-zinc-400',
-    secondary: 'bg-zinc-400',
+    outline: 'bg-[#737373]',
+    secondary: 'bg-[#737373]',
     destructive: 'bg-rose-600',
+    dark: 'bg-[#C7862B]',
   };
 
   return (

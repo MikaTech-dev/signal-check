@@ -20,27 +20,10 @@ const API_BASE_URL = '/api/backend';
 
 
 class ApiClient {
-  private token: string | null = null;
+  private onUnauthorizedCallback: (() => void) | null = null;
 
-  constructor() {
-    if (typeof window !== 'undefined') {
-      this.token = localStorage.getItem('signalng_auth_token');
-    }
-  }
-
-  public setToken(token: string | null) {
-    this.token = token;
-    if (typeof window !== 'undefined') {
-      if (token) {
-        localStorage.setItem('signalng_auth_token', token);
-      } else {
-        localStorage.removeItem('signalng_auth_token');
-      }
-    }
-  }
-
-  public getToken(): string | null {
-    return this.token;
+  public setOnUnauthorized(callback: () => void) {
+    this.onUnauthorizedCallback = callback;
   }
 
   public async request<T>(
@@ -53,21 +36,35 @@ class ApiClient {
       ...((options.headers as Record<string, string>) || {}),
     };
 
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
-    }
-
     try {
       const response = await fetch(url, {
         ...options,
+        credentials: 'include',
         headers,
       });
 
-      const data = await response.json();
+      // Global 401 Interceptor: If session expires or is invalid on a protected action
+      if (response.status === 401) {
+        const isAuthEndpoint = endpoint.startsWith('/auth/');
+        if (!isAuthEndpoint && typeof window !== 'undefined' && this.onUnauthorizedCallback) {
+          const isAuthPage =
+            window.location.pathname === '/login' || window.location.pathname === '/register';
+          if (!isAuthPage) {
+            this.onUnauthorizedCallback();
+          }
+        }
+      }
+
+      let data: unknown = null;
+      try {
+        data = await response.json();
+      } catch {
+        // In case of empty body
+      }
 
       if (!response.ok) {
-        const errorData = data as ApiErrorResponse;
-        const error = new Error(errorData.message || 'API request failed') as Error & {
+        const errorData = (data as ApiErrorResponse) || {};
+        const error = new Error(errorData.message || `Request failed with status ${response.status}`) as Error & {
           statusCode: number;
           errors?: Array<{ field: string; message: string }>;
         };
@@ -79,7 +76,7 @@ class ApiClient {
       return data as ApiResponse<T>;
     } catch (err: unknown) {
       const typedErr = err as { statusCode?: number; message?: string; errors?: Array<{ field: string; message: string }> };
-      if (typedErr.statusCode) {
+      if (typeof typedErr.statusCode === 'number') {
         throw err;
       }
       // Connection or network error
@@ -102,41 +99,29 @@ export const authApi = {
     phone: string;
     password?: string;
   }) => {
-    const res = await apiClient.request<{
-      token: string;
+    return apiClient.request<{
+      token?: string;
       user: UserAccount;
     }>('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
-    if (res.data?.token) {
-      apiClient.setToken(res.data.token);
-    }
-    return res;
   },
 
   login: async (payload: { email: string; password?: string }) => {
-    const res = await apiClient.request<{
-      token: string;
+    return apiClient.request<{
+      token?: string;
       user: UserAccount;
     }>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
-    if (res.data?.token) {
-      apiClient.setToken(res.data.token);
-    }
-    return res;
   },
 
   logout: async () => {
-    try {
-      await apiClient.request<null>('/api/auth/logout', {
-        method: 'POST',
-      });
-    } finally {
-      apiClient.setToken(null);
-    }
+    return apiClient.request<null>('/api/auth/logout', {
+      method: 'POST',
+    });
   },
 
   getMe: async () => {

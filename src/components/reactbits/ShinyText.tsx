@@ -22,13 +22,13 @@ export const ShinyText: React.FC<ShinyTextProps> = ({
         'text-zinc-600 bg-clip-text inline-block',
         disabled
           ? ''
-          : 'bg-gradient-to-r from-purple-950 via-purple-600 to-purple-950 bg-[length:200%_100%] animate-shine',
+          : 'bg-gradient-to-r from-[#0A0A0A] via-[#C7862B] to-[#0A0A0A] bg-[length:200%_100%] animate-shine',
         className
       )}
       style={{
         backgroundImage: disabled
           ? undefined
-          : 'linear-gradient(120deg, rgba(59, 7, 100, 0.8) 0%, rgba(147, 51, 234, 1) 50%, rgba(59, 7, 100, 0.8) 100%)',
+          : 'linear-gradient(120deg, rgba(10, 10, 10, 0.8) 0%, rgba(199, 134, 43, 1) 50%, rgba(10, 10, 10, 0.8) 100%)',
         WebkitBackgroundClip: 'text',
         WebkitTextFillColor: disabled ? 'inherit' : 'transparent',
         animationDuration: animationDuration,

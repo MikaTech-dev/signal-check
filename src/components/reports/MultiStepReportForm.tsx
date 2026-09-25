@@ -205,106 +205,52 @@ export function MultiStepReportForm({ onComplete }: { onComplete?: () => void })
   };
 
   return (
-    <div className="bg-white border border-[#E7E5E4] rounded-lg shadow-sm overflow-hidden text-[#0A0A0A]">
+    <div className="max-w-2xl mx-auto space-y-12 pb-16 text-[#0A0A0A]">
+      {/* Progress & Header */}
       {step <= 4 && (
-        <div className="p-4 border-b border-[#E7E5E4] bg-[#FAFAF9]">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#737373]">
-              Crisis Intake &bull; Step {step} of 4
-            </span>
-            <span className="text-xs font-semibold text-[#C7862B]">
-              {step === 1 && '1. What happened?'}
-              {step === 2 && '2. Where did it occur?'}
-              {step === 3 && '3. When did you observe it?'}
-              {step === 4 && '4. Review and Submit'}
-            </span>
+        <div>
+          <div className="text-sm font-bold text-[#737373] uppercase tracking-wide mb-3">
+            Step {step} of 4
           </div>
-          <div className="grid grid-cols-4 gap-1.5">
-            {[1, 2, 3, 4].map((s) => (
-              <div
-                key={s}
-                className={`h-1.5 rounded-full ${
-                  s <= step ? 'bg-[#0A0A0A]' : 'bg-[#E7E5E4]'
-                }`}
-              />
-            ))}
-          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#0A0A0A]">
+            {step === 1 && 'What happened?'}
+            {step === 2 && 'Where did it occur?'}
+            {step === 3 && 'When did you observe it?'}
+            {step === 4 && 'Review and Submit'}
+          </h2>
         </div>
       )}
 
+      {/* STEP 1 */}
       {step === 1 && (
-        <div className="p-4 sm:p-6 space-y-5">
-          <div className="p-3 rounded-lg bg-[#FAFAF9] border border-[#E7E5E4] space-y-2">
-            <div className="text-[11px] font-bold text-[#737373] uppercase tracking-wider">
-              Quick Situational Presets
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              <button
-                type="button"
-                onClick={() =>
-                  handleQuickPasteScenario({
-                    text: 'Just drove past Market North Exit. Diesel tanker broken down with fuel spill across right lane. Wardens waving cars to bypass.',
-                    type: 'HAZARD_SPILL',
-                    source: 'FIRSTHAND',
-                    landmarkIndex: 0,
-                  })
-                }
-                className="text-[11px] px-2.5 py-1 rounded border border-[#D6D3D1] bg-white hover:bg-[#F5F5F4] text-[#171717]"
-              >
-                1. Tanker Fuel Spill (Firsthand)
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  handleQuickPasteScenario({
-                    text: 'FORWARDED AS RECEIVED: URGENT TO ALL PARENTS!! Bad boys are gathering with weapons near Eastern flyover! Stay inside everyone panic!!',
-                    type: 'ROAD_OBSTRUCTION',
-                    source: 'HEARSAY',
-                    landmarkIndex: 1,
-                  })
-                }
-                className="text-[11px] px-2.5 py-1 rounded border border-[#D6D3D1] bg-white hover:bg-[#F5F5F4] text-[#171717]"
-              >
-                2. Viral WhatsApp Rumor (Hearsay)
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  handleQuickPasteScenario({
-                    text: '9-year-old student wearing white shirt and navy shorts did not return from afternoon math lesson. Last seen near school gate at 5:45 PM.',
-                    type: 'MISSING_PERSON',
-                    source: 'FIRSTHAND',
-                    landmarkIndex: 2,
-                  })
-                }
-                className="text-[11px] px-2.5 py-1 rounded border border-[#D6D3D1] bg-white hover:bg-[#F5F5F4] text-[#171717]"
-              >
-                3. Missing Student Report
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-[#0A0A0A] mb-1.5">
-              Paste or type community chatter / eyewitness telemetry:
+        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="space-y-4">
+            <label className="block text-base font-semibold text-[#171717]">
+              Details
             </label>
             <textarea
-              rows={4}
+              rows={5}
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}
               placeholder="e.g., I just saw a fallen power line blocking the service lane opposite the market..."
-              className="w-full text-xs p-3 rounded-md border border-[#D6D3D1] bg-white text-[#0A0A0A] placeholder-[#A8A29E] focus:outline-none focus:ring-1 focus:ring-[#0A0A0A]"
+              className="w-full text-base sm:text-lg p-5 rounded-2xl border border-[#E7E5E4] bg-white text-[#0A0A0A] placeholder-[#A8A29E] focus:outline-none focus:border-[#0A0A0A] focus:ring-1 focus:ring-[#0A0A0A] resize-none transition-shadow shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]"
             />
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm pt-2">
+              <span className="text-[#737373]">Presets:</span>
+              <button onClick={() => handleQuickPasteScenario({ text: 'Just drove past Market North Exit. Diesel tanker broken down with fuel spill across right lane. Wardens waving cars to bypass.', type: 'HAZARD_SPILL', source: 'FIRSTHAND', landmarkIndex: 0 })} className="text-[#0A0A0A] underline hover:text-[#C7862B] transition-colors">Tanker Spill</button>
+              <button onClick={() => handleQuickPasteScenario({ text: 'FORWARDED AS RECEIVED: URGENT TO ALL PARENTS!! Bad boys are gathering with weapons near Eastern flyover! Stay inside everyone panic!!', type: 'ROAD_OBSTRUCTION', source: 'HEARSAY', landmarkIndex: 1 })} className="text-[#0A0A0A] underline hover:text-[#C7862B] transition-colors">Viral Rumor</button>
+              <button onClick={() => handleQuickPasteScenario({ text: '9-year-old student wearing white shirt and navy shorts did not return from afternoon math lesson. Last seen near school gate at 5:45 PM.', type: 'MISSING_PERSON', source: 'FIRSTHAND', landmarkIndex: 2 })} className="text-[#0A0A0A] underline hover:text-[#C7862B] transition-colors">Missing Student</button>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-[#0A0A0A] mb-1.5">
-              Incident Classification:
+          <div className="space-y-4">
+            <label className="block text-base font-semibold text-[#171717]">
+              Classification
             </label>
             <select
               value={incidentType}
               onChange={(e) => setIncidentType(e.target.value as IncidentType)}
-              className="w-full text-xs p-2.5 rounded-md border border-[#D6D3D1] bg-white text-[#0A0A0A]"
+              className="w-full text-base p-4 rounded-xl border border-[#E7E5E4] bg-white text-[#0A0A0A] focus:outline-none focus:border-[#0A0A0A] focus:ring-1 focus:ring-[#0A0A0A]"
             >
               <option value="ROAD_OBSTRUCTION">Road Obstruction / Blockage</option>
               <option value="HAZARD_SPILL">Hazard / Chemical or Fuel Spill</option>
@@ -317,265 +263,226 @@ export function MultiStepReportForm({ onComplete }: { onComplete?: () => void })
             </select>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-[#0A0A0A] mb-1.5">
-              Source Relationship:
+          <div className="space-y-4">
+            <label className="block text-base font-semibold text-[#171717]">
+              Source
             </label>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setSourceType('FIRSTHAND')}
-                className={`p-2.5 rounded border text-left min-h-[44px] ${
-                  sourceType === 'FIRSTHAND'
-                    ? 'bg-[#0A0A0A] text-[#FAFAF9] border-[#0A0A0A]'
-                    : 'bg-[#FAFAF9] text-[#171717] border-[#E7E5E4]'
-                }`}
-              >
-                <div className="flex items-center gap-1 font-bold text-xs">
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>Firsthand</span>
-                </div>
-                <div className="text-[10px] opacity-80 mt-0.5">I saw this directly</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSourceType('HEARSAY')}
-                className={`p-2.5 rounded border text-left min-h-[44px] ${
-                  sourceType === 'HEARSAY'
-                    ? 'bg-[#44403C] text-[#FAFAF9] border-[#44403C]'
-                    : 'bg-[#FAFAF9] text-[#171717] border-[#E7E5E4]'
-                }`}
-              >
-                <div className="flex items-center gap-1 font-bold text-xs">
-                  <MessageSquareQuote className="w-3.5 h-3.5" />
-                  <span>Hearsay</span>
-                </div>
-                <div className="text-[10px] opacity-80 mt-0.5">Forwarded / Told to me</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSourceType('UNKNOWN')}
-                className={`p-2.5 rounded border text-left min-h-[44px] ${
-                  sourceType === 'UNKNOWN'
-                    ? 'bg-[#44403C] text-[#FAFAF9] border-[#44403C]'
-                    : 'bg-[#FAFAF9] text-[#171717] border-[#E7E5E4]'
-                }`}
-              >
-                <div className="flex items-center gap-1 font-bold text-xs">
-                  <FileText className="w-3.5 h-3.5" />
-                  <span>Unknown</span>
-                </div>
-                <div className="text-[10px] opacity-80 mt-0.5">Uncertain origin</div>
-              </button>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[
+                { id: 'FIRSTHAND', label: 'Firsthand', desc: 'I saw this directly', icon: Eye },
+                { id: 'HEARSAY', label: 'Hearsay', desc: 'Forwarded or told to me', icon: MessageSquareQuote },
+                { id: 'UNKNOWN', label: 'Unknown', desc: 'Uncertain origin', icon: FileText }
+              ].map((src) => {
+                const Icon = src.icon;
+                const isSelected = sourceType === src.id;
+                return (
+                  <button
+                    key={src.id}
+                    type="button"
+                    onClick={() => setSourceType(src.id as ReportSourceType)}
+                    className={`p-5 rounded-2xl border text-left transition-all ${
+                      isSelected
+                        ? 'bg-[#0A0A0A] text-white border-[#0A0A0A] shadow-md'
+                        : 'bg-white text-[#171717] border-[#E7E5E4] hover:border-[#0A0A0A]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 font-bold text-base mb-1.5">
+                      <Icon className="w-5 h-5" />
+                      <span>{src.label}</span>
+                    </div>
+                    <div className={`text-sm ${isSelected ? 'text-gray-300' : 'text-[#737373]'}`}>
+                      {src.desc}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {rawText.trim().length > 10 && (
-            <div className="p-3 rounded-lg bg-stone-50 border border-stone-200 text-xs space-y-1">
-              <div className="flex items-center justify-between font-bold">
-                <span className="flex items-center gap-1 text-[#0A0A0A]">
-                  <Sparkles className="w-3.5 h-3.5 text-[#C7862B]" />
-                  <span>Actionable Completeness Score:</span>
-                </span>
-                <span className="font-mono text-[#0A0A0A]">
-                  {triageAudit.completenessScore}/100
-                </span>
-              </div>
-              {triageAudit.duplicateChainDetected && (
-                <div className="text-[#991B1B] font-semibold text-[11px] pt-1">
-                  &bull; Duplicate viral forwarding chain detected ({triageAudit.duplicateChainConfidence}% confidence).
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="flex justify-end pt-2">
+          <div className="pt-8 flex justify-end">
             <button
               type="button"
               disabled={!rawText.trim()}
               onClick={handleNext}
-              className="px-5 py-2.5 rounded bg-[#0A0A0A] text-[#FAFAF9] text-xs font-bold hover:bg-[#262626] disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px] flex items-center gap-1.5"
+              className="group px-8 py-4 rounded-full bg-[#0A0A0A] text-white text-base font-bold hover:bg-[#262626] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-3 transition-transform active:scale-[0.98]"
             >
-              <span>Next: Location Details</span>
-              <ArrowRight className="w-4 h-4" />
+              <span>Next</span>
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center transition-transform group-hover:translate-x-1">
+                <ArrowRight className="w-4 h-4" />
+              </div>
             </button>
           </div>
         </div>
       )}
 
+      {/* STEP 2 */}
       {step === 2 && (
-        <div className="p-4 sm:p-6 space-y-5">
-          <div className="p-3 rounded-lg bg-amber-50/70 border border-amber-200 text-xs text-amber-950 flex items-start gap-2">
-            <ShieldCheck className="w-4 h-4 text-[#C7862B] shrink-0 mt-0.5" />
-            <p className="leading-relaxed">
-              <strong>Coordinate Privacy:</strong> Exact coordinates are used internally to calculate 5 km notification perimeters and 1.5 km incident linking. Public feeds receive masked coordinates or landmark labels only.
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-[#0A0A0A] mb-2">
-              Select or search verified local landmark:
+        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="space-y-4">
+            <label className="block text-base font-semibold text-[#171717]">
+              Verified local landmarks
             </label>
-            <div className="space-y-1.5">
-              {COMMON_LANDMARKS.map((landmark, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleLandmarkSelect(landmark)}
-                  className={`w-full p-2.5 rounded border text-left text-xs transition-colors flex items-center justify-between min-h-[44px] ${
-                    locationLabel === landmark.label
-                      ? 'bg-[#0A0A0A] text-[#FAFAF9] border-[#0A0A0A] font-bold'
-                      : 'bg-white text-[#171717] border-[#E7E5E4] hover:bg-[#FAFAF9]'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <MapPin className="w-3.5 h-3.5 text-[#C7862B]" />
-                    <span>{landmark.label}</span>
-                  </span>
-                  {locationLabel === landmark.label && <Check className="w-4 h-4 text-[#C7862B]" />}
-                </button>
-              ))}
+            <div className="grid gap-3">
+              {COMMON_LANDMARKS.map((landmark, idx) => {
+                const isSelected = locationLabel === landmark.label;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleLandmarkSelect(landmark)}
+                    className={`w-full p-5 rounded-2xl border text-left transition-all flex items-center justify-between ${
+                      isSelected
+                        ? 'bg-[#0A0A0A] text-white border-[#0A0A0A] shadow-md font-bold'
+                        : 'bg-white text-[#171717] border-[#E7E5E4] hover:border-[#0A0A0A]'
+                    }`}
+                  >
+                    <span className="flex items-center gap-3 text-base">
+                      <MapPin className={`w-5 h-5 ${isSelected ? 'text-[#C7862B]' : 'text-[#737373]'}`} />
+                      <span>{landmark.label}</span>
+                    </span>
+                    {isSelected && <Check className="w-5 h-5 text-[#C7862B]" />}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-[#0A0A0A] mb-1">
-              Or type custom street / landmark description:
+          <div className="space-y-4">
+            <label className="block text-base font-semibold text-[#171717]">
+              Or type custom description
             </label>
             <input
               type="text"
               value={locationLabel}
               onChange={(e) => setLocationLabel(e.target.value)}
               placeholder="e.g., Lugbe Market Fruit Section near chemist"
-              className="w-full text-xs p-2.5 rounded border border-[#D6D3D1] bg-white text-[#0A0A0A]"
+              className="w-full text-base p-4 rounded-xl border border-[#E7E5E4] bg-white text-[#0A0A0A] focus:outline-none focus:border-[#0A0A0A] focus:ring-1 focus:ring-[#0A0A0A]"
             />
           </div>
 
-          <div className="flex justify-between pt-2 border-t border-[#F5F5F4]">
+          <div className="pt-8 flex items-center justify-between">
             <button
               type="button"
               onClick={handleBack}
-              className="px-4 py-2 rounded text-xs font-medium text-[#737373] hover:text-[#0A0A0A] flex items-center gap-1"
+              className="px-6 py-4 text-base font-bold text-[#737373] hover:text-[#0A0A0A] transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back</span>
+              Back
             </button>
             <button
               type="button"
               onClick={handleNext}
-              className="px-5 py-2.5 rounded bg-[#0A0A0A] text-[#FAFAF9] text-xs font-bold hover:bg-[#262626] min-h-[44px] flex items-center gap-1.5"
+              className="group px-8 py-4 rounded-full bg-[#0A0A0A] text-white text-base font-bold hover:bg-[#262626] flex items-center gap-3 transition-transform active:scale-[0.98]"
             >
-              <span>Next: Timestamp</span>
-              <ArrowRight className="w-4 h-4" />
+              <span>Next</span>
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center transition-transform group-hover:translate-x-1">
+                <ArrowRight className="w-4 h-4" />
+              </div>
             </button>
           </div>
         </div>
       )}
 
+      {/* STEP 3 */}
       {step === 3 && (
-        <div className="p-4 sm:p-6 space-y-5">
-          <div className="space-y-3">
-            <label className="block text-xs font-bold text-[#0A0A0A]">
-              Observation Timing:
-            </label>
-
-            <div className="flex items-center gap-2 p-3 rounded-lg border border-[#E7E5E4] bg-[#FAFAF9]">
-              <input
-                type="checkbox"
-                id="happeningNow"
-                checked={isHappeningNow}
-                onChange={(e) => setIsHappeningNow(e.target.checked)}
-                className="w-4 h-4 rounded border-[#D6D3D1] text-[#0A0A0A] focus:ring-[#0A0A0A]"
-              />
-              <label htmlFor="happeningNow" className="text-xs font-semibold text-[#171717] cursor-pointer">
-                Happening right now (Active observation)
-              </label>
-            </div>
+        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="space-y-6">
+            <button
+              type="button"
+              onClick={() => setIsHappeningNow(!isHappeningNow)}
+              className={`w-full p-6 rounded-2xl border text-left transition-all flex items-center justify-between ${
+                isHappeningNow
+                  ? 'bg-[#0A0A0A] text-white border-[#0A0A0A] shadow-md'
+                  : 'bg-white text-[#171717] border-[#E7E5E4] hover:border-[#0A0A0A]'
+              }`}
+            >
+              <div>
+                <div className="font-bold text-lg mb-1">Happening right now</div>
+                <div className={`text-sm ${isHappeningNow ? 'text-gray-300' : 'text-[#737373]'}`}>
+                  Active ongoing observation
+                </div>
+              </div>
+              <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center ${
+                isHappeningNow ? 'border-[#C7862B] bg-[#C7862B]' : 'border-[#D6D3D1]'
+              }`}>
+                {isHappeningNow && <Check className="w-4 h-4 text-[#0A0A0A]" />}
+              </div>
+            </button>
 
             {!isHappeningNow && (
-              <div>
-                <label className="block text-xs font-semibold text-[#57534E] mb-1">
-                  Approximate time of observation:
+              <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                <label className="block text-base font-semibold text-[#171717]">
+                  Approximate time
                 </label>
                 <input
                   type="text"
                   value={eventTime}
                   onChange={(e) => setEventTime(e.target.value)}
                   placeholder="e.g., 6:15 PM or 25 minutes ago"
-                  className="w-full text-xs p-2.5 rounded border border-[#D6D3D1] bg-white text-[#0A0A0A]"
+                  className="w-full text-base p-4 rounded-xl border border-[#E7E5E4] bg-white text-[#0A0A0A] focus:outline-none focus:border-[#0A0A0A] focus:ring-1 focus:ring-[#0A0A0A]"
                 />
               </div>
             )}
           </div>
 
-          <div className="flex justify-between pt-2 border-t border-[#F5F5F4]">
+          <div className="pt-8 flex items-center justify-between">
             <button
               type="button"
               onClick={handleBack}
-              className="px-4 py-2 rounded text-xs font-medium text-[#737373] hover:text-[#0A0A0A] flex items-center gap-1"
+              className="px-6 py-4 text-base font-bold text-[#737373] hover:text-[#0A0A0A] transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back</span>
+              Back
             </button>
             <button
               type="button"
               onClick={handleNext}
-              className="px-5 py-2.5 rounded bg-[#0A0A0A] text-[#FAFAF9] text-xs font-bold hover:bg-[#262626] min-h-[44px] flex items-center gap-1.5"
+              className="group px-8 py-4 rounded-full bg-[#0A0A0A] text-white text-base font-bold hover:bg-[#262626] flex items-center gap-3 transition-transform active:scale-[0.98]"
             >
-              <span>Review & Submit</span>
-              <ArrowRight className="w-4 h-4" />
+              <span>Review</span>
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center transition-transform group-hover:translate-x-1">
+                <ArrowRight className="w-4 h-4" />
+              </div>
             </button>
           </div>
         </div>
       )}
 
+      {/* STEP 4 */}
       {step === 4 && (
-        <div className="p-4 sm:p-6 space-y-5">
-          <div className="bg-[#FAFAF9] border border-[#E7E5E4] rounded-lg p-4 space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-[#737373]">
-              Submission Summary
-            </h4>
-
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between py-1 border-b border-[#E7E5E4]">
-                <span className="text-[#737373]">Incident Type:</span>
-                <span className="font-bold text-[#0A0A0A]">{incidentType.replace(/_/g, ' ')}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-[#E7E5E4]">
-                <span className="text-[#737373]">Source Basis:</span>
-                <span className="font-bold text-[#0A0A0A]">{sourceType}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-[#E7E5E4]">
-                <span className="text-[#737373]">Location Label:</span>
-                <span className="font-bold text-[#0A0A0A]">{locationLabel}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-[#E7E5E4]">
-                <span className="text-[#737373]">Timing:</span>
-                <span className="font-bold text-[#0A0A0A]">
-                  {isHappeningNow ? 'Happening Now' : eventTime}
-                </span>
-              </div>
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="grid gap-8">
+            <div className="space-y-1">
+              <div className="text-sm font-semibold text-[#737373]">Incident</div>
+              <div className="text-2xl font-bold text-[#0A0A0A]">{incidentType.replace(/_/g, ' ')}</div>
+            </div>
+            
+            <div className="space-y-1">
+              <div className="text-sm font-semibold text-[#737373]">Location</div>
+              <div className="text-2xl font-bold text-[#0A0A0A]">{locationLabel}</div>
             </div>
 
-            <div className="pt-2">
-              <span className="text-[11px] font-semibold text-[#737373]">Raw Telemetry:</span>
-              <p className="text-xs text-[#171717] bg-white p-2.5 rounded border border-[#E7E5E4] mt-1 leading-relaxed">
+            <div className="space-y-1">
+              <div className="text-sm font-semibold text-[#737373]">Time</div>
+              <div className="text-2xl font-bold text-[#0A0A0A]">{isHappeningNow ? 'Happening Now' : eventTime}</div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="text-sm font-semibold text-[#737373]">Report Details</div>
+              <p className="text-lg text-[#171717] bg-[#FAFAF9] p-6 rounded-2xl leading-relaxed">
                 {rawText}
               </p>
             </div>
           </div>
 
           {triageAudit.missingActionableDetails.length > 0 && (
-            <div className="p-3.5 rounded-lg bg-stone-50 border border-stone-200 text-xs space-y-1.5">
-              <span className="font-bold text-[#1C1917]">
-                Triage Auditor Note:
-              </span>
-              <p className="text-[#57534E] text-[11px]">
-                Your report will be processed immediately. If you have additional specifics later, these details will help confirm the event:
+            <div className="p-6 rounded-2xl bg-[#FAFAF9] space-y-3">
+              <div className="font-bold text-[#0A0A0A] flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-[#C7862B]" />
+                <span>Before you submit</span>
+              </div>
+              <p className="text-base text-[#57534E] leading-relaxed">
+                Your report will be processed immediately. Adding these details later could help confirm the event:
               </p>
-              <ul className="list-disc pl-4 text-[#57534E] text-[11px] space-y-0.5">
+              <ul className="list-disc pl-5 text-base text-[#57534E] space-y-1">
                 {triageAudit.missingActionableDetails.map((m, idx) => (
                   <li key={idx}>{m}</li>
                 ))}
@@ -583,81 +490,70 @@ export function MultiStepReportForm({ onComplete }: { onComplete?: () => void })
             </div>
           )}
 
-          <p className="text-[11px] text-[#737373] leading-relaxed">
-            By submitting, your report will be evaluated by the Haversine linking engine. Exact coordinates are protected; masked area summary will appear in local feeds.
-          </p>
-
-          <div className="flex justify-between pt-2 border-t border-[#F5F5F4]">
+          <div className="pt-8 flex items-center justify-between">
             <button
               type="button"
               onClick={handleBack}
-              className="px-4 py-2 rounded text-xs font-medium text-[#737373] hover:text-[#0A0A0A] flex items-center gap-1"
+              className="px-6 py-4 text-base font-bold text-[#737373] hover:text-[#0A0A0A] transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back</span>
+              Back
             </button>
             <button
               type="button"
               disabled={isSubmitting}
               onClick={handleSubmitReport}
-              className="px-6 py-2.5 rounded bg-[#0A0A0A] text-[#FAFAF9] text-xs font-bold hover:bg-[#262626] active:scale-[0.98] transition-transform min-h-[44px] flex items-center gap-1.5"
+              className="group px-8 py-4 rounded-full bg-[#0A0A0A] text-white text-base font-bold hover:bg-[#262626] transition-transform active:scale-[0.98] flex items-center gap-3"
             >
-              <Check className="w-4 h-4 text-[#C7862B]" />
-              <span>{isSubmitting ? 'Triage Processing...' : 'Submit Incident Report'}</span>
+              <Check className="w-5 h-5" />
+              <span>{isSubmitting ? 'Processing...' : 'Submit Report'}</span>
             </button>
           </div>
         </div>
       )}
 
+      {/* STEP 5 */}
       {step === 5 && submissionResult && (
-        <div className="p-5 sm:p-6 space-y-4">
-          <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-950 space-y-1">
-            <div className="flex items-center gap-2 font-bold text-sm">
-              <Check className="w-4 h-4 text-emerald-600" />
-              <span>Report Successfully Ingested and Triaged</span>
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500 pt-8">
+          <div className="flex flex-col items-center justify-center text-center space-y-6">
+            <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center">
+              <Check className="w-10 h-10 text-emerald-600" />
             </div>
-            <p className="text-xs text-emerald-800">
-              {submissionResult.isNewIncident
-                ? 'Your report initialized a new staged community incident.'
-                : `Your report was automatically linked to an existing incident within the 1.5 km cluster radius.`}
-            </p>
-          </div>
-
-          <div className="p-4 rounded-lg bg-[#FAFAF9] border border-[#E7E5E4] space-y-2.5 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-[#737373] font-semibold">Incident Identifier:</span>
-              <span className="font-mono font-bold text-[#0A0A0A]">
-                {submissionResult.linkedIncident.id}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-[#737373] font-semibold">Current State:</span>
-              <span className="font-bold px-2 py-0.5 rounded bg-white border border-[#D6D3D1]">
-                {submissionResult.linkedIncident.state}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-[#737373] font-semibold">Completeness Score:</span>
-              <span className="font-mono font-bold text-[#0A0A0A]">
-                {submissionResult.report.triageAudit.completenessScore}/100
-              </span>
+            <div className="space-y-3 max-w-sm">
+              <h2 className="text-4xl font-bold text-[#0A0A0A] tracking-tight">Report Received</h2>
+              <p className="text-lg text-[#57534E] leading-relaxed">
+                {submissionResult.isNewIncident
+                  ? 'We have initialized a new community incident based on your observation.'
+                  : 'Your observation has been linked to an existing nearby incident.'}
+              </p>
             </div>
           </div>
 
-          {submissionResult.report.triageAudit.missingActionableDetails.length > 0 && (
-            <div className="p-3.5 rounded-lg bg-stone-50 border border-stone-200 text-xs space-y-1.5">
-              <span className="font-bold text-[#1C1917]">
-                More detail could help corroborate:
-              </span>
-              <ul className="list-disc pl-4 text-[#57534E] text-[11px] space-y-0.5">
-                {submissionResult.report.triageAudit.missingActionableDetails.map((m, idx) => (
-                  <li key={idx}>{m}</li>
-                ))}
-              </ul>
+          <div className="p-8 rounded-2xl bg-[#FAFAF9] space-y-6">
+            <div className="flex items-center justify-between border-b border-[#E7E5E4] pb-4">
+              <span className="text-base font-semibold text-[#737373]">Incident ID</span>
+              <span className="text-lg font-bold text-[#0A0A0A]">{submissionResult.linkedIncident.id}</span>
             </div>
-          )}
+            <div className="flex items-center justify-between border-b border-[#E7E5E4] pb-4">
+              <span className="text-base font-semibold text-[#737373]">Current Status</span>
+              <span className="text-lg font-bold text-[#0A0A0A]">{submissionResult.linkedIncident.state}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-base font-semibold text-[#737373]">Completeness</span>
+              <span className="text-lg font-bold text-[#0A0A0A]">{submissionResult.report.triageAudit.completenessScore}/100</span>
+            </div>
+          </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F5F5F4]">
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button
+              type="button"
+              onClick={() => {
+                if (onComplete) onComplete();
+                window.location.href = `/nearby?incident=${submissionResult.linkedIncident.id}`;
+              }}
+              className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#0A0A0A] text-white text-base font-bold hover:bg-[#262626] transition-transform active:scale-[0.98] text-center"
+            >
+              View live feed
+            </button>
             <button
               type="button"
               onClick={() => {
@@ -665,19 +561,9 @@ export function MultiStepReportForm({ onComplete }: { onComplete?: () => void })
                 setRawText('');
                 setSubmissionResult(null);
               }}
-              className="px-4 py-2 rounded text-xs font-medium text-[#737373] hover:text-[#0A0A0A] hover:bg-[#F5F5F4]"
+              className="w-full sm:w-auto px-8 py-4 rounded-full border border-[#E7E5E4] bg-white text-[#0A0A0A] text-base font-bold hover:border-[#0A0A0A] transition-colors text-center"
             >
-              Submit Another Report
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (onComplete) onComplete();
-                window.location.href = `/nearby?incident=${submissionResult.linkedIncident.id}`;
-              }}
-              className="px-5 py-2.5 rounded bg-[#0A0A0A] text-[#FAFAF9] text-xs font-bold hover:bg-[#262626] min-h-[44px]"
-            >
-              View Linked Incident Feed
+              Submit another
             </button>
           </div>
         </div>

@@ -5,25 +5,25 @@ import { cn } from "@/lib/utils"
 import { Loader2 } from "lucide-react"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding font-medium whitespace-nowrap transition-all duration-150 outline-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-950 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 cursor-pointer [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding font-medium whitespace-nowrap transition-all duration-150 outline-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A0A0A] active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 cursor-pointer [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-purple-950 text-white hover:bg-purple-900 active:bg-purple-950 shadow-xs border-purple-900/20",
-        primary: "bg-purple-950 text-white hover:bg-purple-900 active:bg-purple-950 shadow-xs border border-purple-900/20",
+        default: "bg-[#0A0A0A] text-white hover:bg-[#262626] active:bg-[#0A0A0A] shadow-xs border-[#0A0A0A]",
+        primary: "bg-[#0A0A0A] text-white hover:bg-[#262626] active:bg-[#0A0A0A] shadow-xs border border-[#0A0A0A]",
         outline:
-          "border-zinc-300 bg-white text-zinc-900 shadow-2xs hover:bg-zinc-50 active:bg-zinc-100",
+          "border-[#D6D3D1] bg-white text-[#0A0A0A] shadow-2xs hover:bg-[#F5F5F4] active:bg-[#E7E5E4]",
         secondary:
-          "bg-zinc-100 text-zinc-900 hover:bg-zinc-200 active:bg-zinc-300 border border-zinc-200",
-        'purple-subtle':
-          "bg-purple-50 text-purple-950 hover:bg-purple-100 active:bg-purple-200 border border-purple-200",
+          "bg-[#F5F5F4] text-[#0A0A0A] hover:bg-[#E7E5E4] active:bg-[#D6D3D1] border border-[#E7E5E4]",
+        subtle:
+          "bg-amber-50 text-amber-950 hover:bg-amber-100 active:bg-amber-200 border border-amber-200",
         ghost:
-          "bg-transparent text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950 active:bg-zinc-200",
+          "bg-transparent text-[#57534E] hover:bg-[#F5F5F4] hover:text-[#0A0A0A] active:bg-[#E7E5E4]",
         destructive:
           "bg-rose-600 text-white hover:bg-rose-500 active:bg-rose-700 shadow-xs border border-rose-600",
         danger:
           "bg-rose-600 text-white hover:bg-rose-500 active:bg-rose-700 shadow-xs border border-rose-600",
-        link: "text-purple-950 underline-offset-4 hover:underline",
+        link: "text-[#0A0A0A] underline-offset-4 hover:underline",
       },
       size: {
         default: "text-sm px-4 py-2 min-h-[44px] gap-2",

@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Incident, IncidentState, IncidentType } from '@/types';
+import { Incident } from '@/types';
 import { signalStore } from '@/lib/store';
 import { incidentsApi } from '@/lib/api';
 import { calculateHaversineDistance } from '@/lib/haversine';
@@ -16,7 +16,6 @@ import {
   DrawerTitle,
   DrawerDescription,
   DrawerFooter,
-  DrawerClose,
 } from '@/components/ui/drawer';
 import {
   PlusCircle,
@@ -25,6 +24,9 @@ import {
   RefreshCw,
   AlertCircle,
   SlidersHorizontal,
+  ArrowRight,
+  ShieldCheck,
+  Check,
 } from 'lucide-react';
 
 function NearbyIncidentsContent() {
@@ -39,12 +41,11 @@ function NearbyIncidentsContent() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
-  // Staged filter values (only applied on "Apply")
+  // Staged filter values for mobile drawer
   const [stagedFilterState, setStagedFilterState] = useState<string>('ALL');
   const [stagedFilterType, setStagedFilterType] = useState<string>('ALL');
   const [stagedMaxDistanceKm, setStagedMaxDistanceKm] = useState<number>(5.0);
 
-  const currentUser = signalStore.getCurrentUser();
   const userCoords = signalStore.getUserCoordinates();
 
   const loadData = async () => {
@@ -84,7 +85,7 @@ function NearbyIncidentsContent() {
         return;
       }
     } catch {
-      // Fall back to local store when server is unreachable
+      // Fall back to local store
     }
 
     const list = signalStore.getIncidents();
@@ -109,7 +110,6 @@ function NearbyIncidentsContent() {
     setTimeout(() => setIsRefreshing(false), 400);
   };
 
-  // Open drawer and pre-populate staged values with current active values
   const openFilterDrawer = () => {
     setStagedFilterState(filterState);
     setStagedFilterType(filterType);
@@ -140,7 +140,6 @@ function NearbyIncidentsContent() {
     maxDistanceKm !== 5.0,
   ].filter(Boolean).length;
 
-  // Filter and sort incidents by distance
   const filteredIncidents = useMemo(() => {
     return incidents
       .map((inc) => ({
@@ -157,28 +156,31 @@ function NearbyIncidentsContent() {
   }, [incidents, userCoords, filterState, filterType, maxDistanceKm]);
 
   return (
-    <div className="space-y-4">
-      {/* Top bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-lg border border-[#E7E5E4]">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Radio className="w-4 h-4 text-[#C7862B]" />
-            <h1 className="text-base sm:text-lg font-bold text-[#0A0A0A] tracking-tight">
-              Nearby Incidents
-            </h1>
+    <div className="space-y-8 max-w-4xl mx-auto pb-16 text-[#0A0A0A]">
+      {/* Editorial Radar Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4 pb-2 border-b border-[#E7E5E4]">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0A0A0A] text-white text-xs font-bold uppercase tracking-wider">
+            <Radio className="w-3.5 h-3.5 text-[#C7862B]" />
+            <span>Active Corridor Radar</span>
           </div>
-          <p className="text-xs text-[#57534E] flex items-center gap-1">
-            <MapPin className="w-3.5 h-3.5 text-[#737373]" />
-            <span>Simulated origin:</span>
-            <span className="font-semibold text-[#171717]">Lugbe Market Central, Abuja</span>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#0A0A0A]">
+            Nearby Incidents
+          </h1>
+          <p className="text-sm text-[#57534E] flex items-center gap-1.5 flex-wrap">
+            <MapPin className="w-3.5 h-3.5 text-[#C7862B]" />
+            <span>Origin:</span>
+            <span className="font-semibold text-[#0A0A0A]">Lugbe Market Central, Abuja</span>
+            <span className="text-[#A8A29E]">&bull;</span>
+            <span className="text-xs text-[#737373]">5 km mathematical perimeter</span>
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="p-2 rounded border border-[#E7E5E4] hover:bg-[#F5F5F4] text-[#737373] text-xs font-medium flex items-center gap-1.5 min-h-[44px]"
+            className="px-4 py-2.5 rounded-full border border-[#D6D3D1] hover:border-[#0A0A0A] bg-white text-[#0A0A0A] text-xs font-bold flex items-center gap-2 transition-all min-h-[44px] active:scale-[0.98]"
             title="Refresh feed"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -187,102 +189,117 @@ function NearbyIncidentsContent() {
 
           <Link
             href="/report"
-            className="px-4 py-2 rounded bg-[#0A0A0A] text-[#FAFAF9] text-xs font-bold hover:bg-[#262626] active:scale-[0.98] transition-transform flex items-center gap-1.5 min-h-[44px]"
+            className="group px-6 py-2.5 rounded-full bg-[#0A0A0A] text-white text-xs font-bold hover:bg-[#262626] flex items-center gap-2.5 transition-all min-h-[44px] active:scale-[0.98]"
           >
-            <PlusCircle className="w-4 h-4 text-[#C7862B]" />
-            <span>Report</span>
+            <span>Log Report</span>
+            <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center transition-transform group-hover:translate-x-0.5">
+              <ArrowRight className="w-3 h-3" />
+            </div>
           </Link>
         </div>
       </div>
 
-      {/* Disclaimer */}
-      <div className="p-3 rounded-lg bg-[#FAFAF9] border border-[#E7E5E4] text-xs text-[#57534E] flex items-start gap-2">
+      {/* Epistemic Caution Notice */}
+      <div className="p-4 rounded-2xl bg-[#FAFAF9] border border-[#E7E5E4] text-xs text-[#57534E] flex items-start gap-3">
         <AlertCircle className="w-4 h-4 text-[#C7862B] shrink-0 mt-0.5" />
         <p className="leading-relaxed">
-          Reports reflect community observations within a 5 km radius. This system does not declare any route safe.
+          <strong className="text-[#0A0A0A]">Caution:</strong> Community sightings are organized with source depth and contradictions. This platform does not declare any route safe.
         </p>
       </div>
 
-      {/* Filter row: desktop inline, mobile via drawer */}
-      <div className="flex items-center justify-between gap-2">
-        {/* Desktop filters - hidden on small screens */}
-        <div className="hidden sm:flex items-center gap-2 flex-wrap text-xs">
-          <span className="text-[#737373] font-semibold pr-2 border-r border-[#E7E5E4]">Filters</span>
+      {/* Filter Bar */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        {/* Desktop Filter Pills */}
+        <div className="hidden sm:flex items-center gap-2.5 flex-wrap text-xs">
+          <span className="text-[#737373] font-bold uppercase tracking-wider text-[11px] pr-2 border-r border-[#E7E5E4]">
+            Filters
+          </span>
 
           <select
             value={filterState}
             onChange={(e) => setFilterState(e.target.value)}
-            className="p-1.5 rounded border border-[#D6D3D1] bg-white text-[#171717] font-medium text-xs"
+            className="px-3.5 py-2 rounded-xl border border-[#0A0A0A]/20 bg-white text-[#0A0A0A] font-bold text-xs focus:outline-none focus:border-[#0A0A0A] focus:ring-1 focus:ring-[#0A0A0A] shadow-xs cursor-pointer"
           >
-            <option value="ALL">All states</option>
-            <option value="CORROBORATED">Corroborated</option>
-            <option value="CONFIRMED">Anchor confirmed</option>
-            <option value="CONFLICTING">Conflicting</option>
-            <option value="UNVERIFIED">Unverified</option>
-            <option value="STALE">Stale</option>
-            <option value="RESOLVED">Resolved</option>
+            <option value="ALL" className="bg-white text-[#0A0A0A]">All States</option>
+            <option value="CORROBORATED" className="bg-white text-[#0A0A0A]">Corroborated</option>
+            <option value="CONFIRMED" className="bg-white text-[#0A0A0A]">Anchor Confirmed</option>
+            <option value="CONFLICTING" className="bg-white text-[#0A0A0A]">Conflicting</option>
+            <option value="UNVERIFIED" className="bg-white text-[#0A0A0A]">Unverified</option>
+            <option value="STALE" className="bg-white text-[#0A0A0A]">Stale</option>
+            <option value="RESOLVED" className="bg-white text-[#0A0A0A]">Resolved</option>
           </select>
 
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="p-1.5 rounded border border-[#D6D3D1] bg-white text-[#171717] font-medium text-xs"
+            className="px-3.5 py-2 rounded-xl border border-[#0A0A0A]/20 bg-white text-[#0A0A0A] font-bold text-xs focus:outline-none focus:border-[#0A0A0A] focus:ring-1 focus:ring-[#0A0A0A] shadow-xs cursor-pointer"
           >
-            <option value="ALL">All incident types</option>
-            <option value="ROAD_OBSTRUCTION">Road obstruction</option>
-            <option value="HAZARD_SPILL">Hazard / fuel spill</option>
-            <option value="CHECKPOINT">Checkpoint</option>
-            <option value="MISSING_PERSON">Missing person</option>
-            <option value="SECURITY_GATHERING">Security gathering</option>
+            <option value="ALL" className="bg-white text-[#0A0A0A]">All Incident Types</option>
+            <option value="ROAD_OBSTRUCTION" className="bg-white text-[#0A0A0A]">Road Obstruction</option>
+            <option value="HAZARD_SPILL" className="bg-white text-[#0A0A0A]">Hazard / Fuel Spill</option>
+            <option value="CHECKPOINT" className="bg-white text-[#0A0A0A]">Checkpoint</option>
+            <option value="MISSING_PERSON" className="bg-white text-[#0A0A0A]">Missing Person</option>
+            <option value="SECURITY_GATHERING" className="bg-white text-[#0A0A0A]">Security Gathering</option>
           </select>
 
           <select
             value={maxDistanceKm}
             onChange={(e) => setMaxDistanceKm(Number(e.target.value))}
-            className="p-1.5 rounded border border-[#D6D3D1] bg-white text-[#171717] font-medium text-xs"
+            className="px-3.5 py-2 rounded-xl border border-[#0A0A0A]/20 bg-white text-[#0A0A0A] font-bold text-xs focus:outline-none focus:border-[#0A0A0A] focus:ring-1 focus:ring-[#0A0A0A] shadow-xs cursor-pointer"
           >
-            <option value={1.5}>Within 1.5 km</option>
-            <option value={5.0}>Within 5 km</option>
-            <option value={15.0}>Within 15 km</option>
+            <option value={1.5} className="bg-white text-[#0A0A0A]">Within 1.5 km (Immediate)</option>
+            <option value={5.0} className="bg-white text-[#0A0A0A]">Within 5 km (Standard Perimeter)</option>
+            <option value={15.0} className="bg-white text-[#0A0A0A]">Within 15 km (Regional Corridor)</option>
           </select>
+
+          {activeFilterCount > 0 && (
+            <button
+              onClick={resetFilters}
+              className="text-xs text-[#737373] underline hover:text-[#0A0A0A] font-medium"
+            >
+              Reset
+            </button>
+          )}
         </div>
 
-        {/* Mobile filter trigger */}
+        {/* Mobile Filter Button */}
         <button
           onClick={openFilterDrawer}
-          className="sm:hidden flex items-center gap-1.5 px-3 py-2 rounded border border-[#E7E5E4] bg-white text-xs font-semibold text-[#171717] min-h-[44px]"
+          className="sm:hidden flex items-center gap-2 px-4 py-2.5 rounded-full border border-[#D6D3D1] bg-white text-xs font-bold text-[#0A0A0A] min-h-[44px]"
         >
           <SlidersHorizontal className="w-3.5 h-3.5 text-[#737373]" />
           <span>Filters</span>
           {activeFilterCount > 0 && (
-            <span className="w-4 h-4 rounded-full bg-[#0A0A0A] text-[#FAFAF9] text-[10px] font-bold flex items-center justify-center">
+            <span className="w-5 h-5 rounded-full bg-[#0A0A0A] text-white text-[10px] font-bold flex items-center justify-center">
               {activeFilterCount}
             </span>
           )}
         </button>
 
-        <span className="text-[11px] text-[#737373] ml-auto whitespace-nowrap">
-          {filteredIncidents.length} of {incidents.length} shown
+        <span className="text-xs font-semibold text-[#737373] ml-auto">
+          {filteredIncidents.length} of {incidents.length} active
         </span>
       </div>
 
-      {/* Incidents feed */}
+      {/* Incidents Feed */}
       {filteredIncidents.length === 0 ? (
-        <div className="bg-white border border-[#E7E5E4] rounded-lg p-8 text-center space-y-3">
-          <SlidersHorizontal className="w-8 h-8 text-[#A8A29E] mx-auto" />
-          <h3 className="text-sm font-bold text-[#0A0A0A]">No incidents match these filters</h3>
-          <p className="text-xs text-[#737373] max-w-sm mx-auto">
-            Try widening the distance or clearing the state filter.
-          </p>
-          <button
-            onClick={resetFilters}
-            className="px-3 py-1.5 text-xs font-bold rounded bg-[#0A0A0A] text-[#FAFAF9]"
-          >
-            Reset filters
-          </button>
+        <div className="p-2 rounded-[2.5rem] bg-black/5 border border-black/5">
+          <div className="bg-white rounded-[calc(2.5rem-0.5rem)] p-12 text-center space-y-4">
+            <SlidersHorizontal className="w-10 h-10 text-[#A8A29E] mx-auto" />
+            <h3 className="text-xl font-bold text-[#0A0A0A]">No incidents match these filters</h3>
+            <p className="text-sm text-[#737373] max-w-sm mx-auto">
+              Try widening your distance perimeter or resetting the status filters.
+            </p>
+            <button
+              onClick={resetFilters}
+              className="px-6 py-2.5 text-xs font-bold rounded-full bg-[#0A0A0A] text-white hover:bg-[#262626] transition-transform active:scale-[0.98]"
+            >
+              Reset all filters
+            </button>
+          </div>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {filteredIncidents.map((incident) => (
             <IncidentCard
               key={incident.id}
@@ -293,7 +310,7 @@ function NearbyIncidentsContent() {
         </div>
       )}
 
-      {/* Incident detail drawer */}
+      {/* Incident Detail Drawer */}
       {selectedIncident && (
         <IncidentDetailDrawer
           incident={selectedIncident}
@@ -306,27 +323,29 @@ function NearbyIncidentsContent() {
         />
       )}
 
-      {/* Mobile filter drawer */}
+      {/* Mobile Filter Drawer */}
       <Drawer open={filterDrawerOpen} onOpenChange={setFilterDrawerOpen}>
         <DrawerContent>
           <DrawerHeader>
-            <DrawerTitle>Filter incidents</DrawerTitle>
+            <DrawerTitle>Filter Incidents</DrawerTitle>
             <DrawerDescription>
-              Narrow the feed by status, type, or distance from your location.
+              Narrow corridor observations by verification state, incident type, or radius.
             </DrawerDescription>
           </DrawerHeader>
 
-          <div className="px-4 py-2 space-y-4 overflow-y-auto">
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-[#171717]">Status</label>
+          <div className="px-6 py-4 space-y-5 overflow-y-auto">
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-[#737373]">
+                Verification State
+              </label>
               <select
                 value={stagedFilterState}
                 onChange={(e) => setStagedFilterState(e.target.value)}
-                className="w-full p-2.5 rounded border border-[#D6D3D1] bg-white text-[#171717] text-xs"
+                className="w-full p-3.5 rounded-xl border border-[#D6D3D1] bg-white text-[#0A0A0A] text-sm font-semibold"
               >
-                <option value="ALL">All states</option>
+                <option value="ALL">All States</option>
                 <option value="CORROBORATED">Corroborated</option>
-                <option value="CONFIRMED">Anchor confirmed</option>
+                <option value="CONFIRMED">Anchor Confirmed</option>
                 <option value="CONFLICTING">Conflicting</option>
                 <option value="UNVERIFIED">Unverified</option>
                 <option value="STALE">Stale</option>
@@ -334,32 +353,36 @@ function NearbyIncidentsContent() {
               </select>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-[#171717]">Incident type</label>
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-[#737373]">
+                Incident Type
+              </label>
               <select
                 value={stagedFilterType}
                 onChange={(e) => setStagedFilterType(e.target.value)}
-                className="w-full p-2.5 rounded border border-[#D6D3D1] bg-white text-[#171717] text-xs"
+                className="w-full p-3.5 rounded-xl border border-[#D6D3D1] bg-white text-[#0A0A0A] text-sm font-semibold"
               >
-                <option value="ALL">All types</option>
-                <option value="ROAD_OBSTRUCTION">Road obstruction</option>
-                <option value="HAZARD_SPILL">Hazard / fuel spill</option>
+                <option value="ALL">All Types</option>
+                <option value="ROAD_OBSTRUCTION">Road Obstruction</option>
+                <option value="HAZARD_SPILL">Hazard / Fuel Spill</option>
                 <option value="CHECKPOINT">Checkpoint</option>
-                <option value="MISSING_PERSON">Missing person</option>
-                <option value="SECURITY_GATHERING">Security gathering</option>
+                <option value="MISSING_PERSON">Missing Person</option>
+                <option value="SECURITY_GATHERING">Security Gathering</option>
               </select>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-[#171717]">Max distance</label>
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-[#737373]">
+                Max Distance Radius
+              </label>
               <select
                 value={stagedMaxDistanceKm}
                 onChange={(e) => setStagedMaxDistanceKm(Number(e.target.value))}
-                className="w-full p-2.5 rounded border border-[#D6D3D1] bg-white text-[#171717] text-xs"
+                className="w-full p-3.5 rounded-xl border border-[#D6D3D1] bg-white text-[#0A0A0A] text-sm font-semibold"
               >
-                <option value={1.5}>Within 1.5 km (immediate)</option>
-                <option value={5.0}>Within 5 km (full perimeter)</option>
-                <option value={15.0}>Within 15 km (regional)</option>
+                <option value={1.5}>Within 1.5 km (Immediate)</option>
+                <option value={5.0}>Within 5.0 km (Full Perimeter)</option>
+                <option value={15.0}>Within 15.0 km (Regional Corridor)</option>
               </select>
             </div>
           </div>
@@ -367,15 +390,15 @@ function NearbyIncidentsContent() {
           <DrawerFooter>
             <button
               onClick={applyFilters}
-              className="w-full py-3 rounded bg-[#0A0A0A] text-[#FAFAF9] text-xs font-bold min-h-[48px]"
+              className="w-full py-4 rounded-full bg-[#0A0A0A] text-white text-sm font-bold active:scale-[0.98] transition-transform min-h-[48px]"
             >
-              Apply filters
+              Apply Filters
             </button>
             <button
               onClick={resetFilters}
-              className="w-full py-3 rounded border border-[#E7E5E4] text-xs font-semibold text-[#737373] min-h-[44px]"
+              className="w-full py-3.5 rounded-full border border-[#D6D3D1] text-xs font-bold text-[#737373] hover:text-[#0A0A0A] min-h-[44px]"
             >
-              Clear all
+              Clear All
             </button>
           </DrawerFooter>
         </DrawerContent>
@@ -386,7 +409,16 @@ function NearbyIncidentsContent() {
 
 export default function NearbyPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-xs text-[#737373]">Loading nearby incidents...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-[50dvh] flex flex-col items-center justify-center space-y-3">
+          <div className="w-8 h-8 rounded-full border-2 border-black/10 border-t-[#0A0A0A] animate-spin" />
+          <p className="text-xs font-semibold text-[#737373] tracking-wide uppercase">
+            Scanning perimeter...
+          </p>
+        </div>
+      }
+    >
       <NearbyIncidentsContent />
     </Suspense>
   );

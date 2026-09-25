@@ -53,8 +53,8 @@ export const TabNav: React.FC<TabNavProps> = ({
             className={cn(
               'flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all border select-none shrink-0 min-h-[44px] cursor-pointer',
               isActive
-                ? 'bg-purple-950 text-white border-purple-950 shadow-xs'
-                : 'bg-white text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50 border-zinc-200/80'
+                ? 'bg-[#0A0A0A] text-white border-[#0A0A0A] shadow-xs'
+                : 'bg-white text-[#57534E] hover:text-[#0A0A0A] hover:bg-[#F5F5F4] border-[#E7E5E4]'
             )}
           >
             {tab.icon}
@@ -64,8 +64,8 @@ export const TabNav: React.FC<TabNavProps> = ({
                 className={cn(
                   'px-1.5 py-0.5 text-[11px] rounded-full font-mono font-bold',
                   isActive
-                    ? 'bg-purple-800 text-white'
-                    : 'bg-zinc-100 text-zinc-600'
+                    ? 'bg-[#262626] text-[#C7862B]'
+                    : 'bg-[#F5F5F4] text-[#737373]'
                 )}
               >
                 {tab.badge}

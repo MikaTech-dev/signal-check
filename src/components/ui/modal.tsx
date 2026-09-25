@@ -43,7 +43,7 @@ export const Modal: React.FC<ModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-purple-950/40 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
@@ -51,20 +51,20 @@ export const Modal: React.FC<ModalProps> = ({
     >
       <div
         className={cn(
-          'relative w-full max-w-lg bg-white border border-zinc-200 rounded-xl shadow-2xl p-6 overflow-hidden max-h-[90vh] flex flex-col text-zinc-900',
+          'relative w-full max-w-lg bg-white border border-[#E7E5E4] rounded-2xl shadow-2xl p-6 overflow-hidden max-h-[90vh] flex flex-col text-[#0A0A0A]',
           className
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
-          <h2 id="modal-title" className="text-lg font-bold text-purple-950 tracking-tight">
+        <div className="flex items-center justify-between pb-4 border-b border-[#F5F5F4]">
+          <h2 id="modal-title" className="text-lg font-bold text-[#0A0A0A] tracking-tight">
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="p-2 text-zinc-400 hover:text-zinc-700 rounded-lg hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-purple-900 min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors cursor-pointer"
+            className="p-2 text-[#737373] hover:text-[#0A0A0A] rounded-lg hover:bg-[#F5F5F4] focus-visible:outline-2 focus-visible:outline-[#0A0A0A] min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>

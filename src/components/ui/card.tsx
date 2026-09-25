@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils"
 
 export interface CardProps extends React.ComponentProps<"div"> {
   size?: "default" | "sm"
-  variant?: "default" | "elevated" | "purple-tint" | "dark-purple"
+  variant?: "default" | "elevated" | "amber-tint" | "dark"
 }
 
 function Card({
@@ -13,10 +13,10 @@ function Card({
   ...props
 }: CardProps) {
   const variantStyles = {
-    default: "bg-card text-card-foreground border border-zinc-200/80 shadow-xs",
-    elevated: "bg-white border border-zinc-200 text-zinc-900 shadow-sm hover:shadow-md transition-shadow",
-    "purple-tint": "bg-purple-50/50 border border-purple-200/60 text-zinc-900",
-    "dark-purple": "bg-[#0f051d] border border-purple-900/40 text-white shadow-md",
+    default: "bg-white text-[#0A0A0A] border border-[#E7E5E4] shadow-xs",
+    elevated: "bg-white border border-[#D6D3D1] text-[#0A0A0A] shadow-sm hover:shadow-md transition-shadow",
+    "amber-tint": "bg-amber-50/60 border border-amber-200/80 text-[#0A0A0A]",
+    "dark": "bg-[#0A0A0A] border border-[#171717] text-white shadow-md",
   }
 
   return (

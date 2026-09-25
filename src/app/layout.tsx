@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+import { AuthProvider } from '@/context/AuthContext';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toaster } from 'sonner';
 
@@ -18,6 +19,11 @@ export const metadata: Metadata = {
   title: 'SignalNG: Hyper-Local Crisis Triage Engine',
   description:
     'Organizing community chatter, measuring source depth, cross-examining contradictions, and alerting residents within a verified 5 km radius.',
+  icons: {
+    icon: '/signal.png',
+    shortcut: '/signal.png',
+    apple: '/signal.png',
+  },
 };
 
 export const viewport: Viewport = {
@@ -38,7 +44,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#FAFAF9] text-[#0A0A0A] selection:bg-[#C7862B]/20 selection:text-[#0A0A0A]">
-        <AppShell>{children}</AppShell>
+        <AuthProvider>
+          <AppShell>{children}</AppShell>
+        </AuthProvider>
         <Toaster
           position="top-right"
           richColors

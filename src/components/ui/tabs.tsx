@@ -81,10 +81,10 @@ export function TabsTrigger({ value, className, children, ...props }: TabsTrigge
       aria-selected={isSelected}
       onClick={() => context.onValueChange(value)}
       className={cn(
-        'inline-flex items-center justify-center whitespace-nowrap rounded-md px-3.5 py-1.5 text-xs font-bold transition-all duration-160 ease-out focus-visible:outline-2 focus-visible:outline-purple-950 disabled:pointer-events-none disabled:opacity-50 cursor-pointer min-h-[36px]',
+        'inline-flex items-center justify-center whitespace-nowrap rounded-md px-3.5 py-1.5 text-xs font-bold transition-all duration-160 ease-out focus-visible:outline-2 focus-visible:outline-[#0A0A0A] disabled:pointer-events-none disabled:opacity-50 cursor-pointer min-h-[36px]',
         isSelected
-          ? 'bg-purple-950 text-white shadow-xs'
-          : 'text-zinc-600 hover:text-zinc-950 hover:bg-zinc-200/60',
+          ? 'bg-[#0A0A0A] text-white shadow-xs'
+          : 'text-[#57534E] hover:text-[#0A0A0A] hover:bg-[#E7E5E4]',
         className
       )}
       {...props}

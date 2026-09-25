@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ShieldCheck, Radio, Clock, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,35 +27,39 @@ export const Header: React.FC<HeaderProps> = ({
           {showBackToLanding && (
             <Link
               href="/"
-              className="p-2 text-zinc-500 hover:text-purple-950 hover:bg-zinc-100 rounded-lg transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]"
+              className="p-2 text-[#737373] hover:text-[#0A0A0A] hover:bg-[#F5F5F4] rounded-lg transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]"
               aria-label="Back to landing page"
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
           )}
-          <div className="w-9 h-9 rounded-lg bg-purple-950 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-xs">
-            SC
-          </div>
+          <Image
+            src="/signal.png"
+            alt="SignalNG"
+            width={28}
+            height={28}
+            className="object-contain"
+          />
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-base sm:text-lg font-bold tracking-tight text-zinc-950">
-                Signal-check
+              <span className="text-base sm:text-lg font-bold tracking-tight text-[#0A0A0A]">
+                SignalNG
               </span>
-              <Badge variant="purple" dot>
-                Live DeepSeek Filter
+              <Badge variant="amber" dot>
+                Live Triage Filter
               </Badge>
             </div>
-            <p className="text-xs text-zinc-500">
-              Real-time transit verification for tense regional corridors
+            <p className="text-xs text-[#57534E]">
+              Hyper-local crisis triage for uncertain regional corridors
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-end">
-          <div className="flex items-center gap-2 text-xs text-zinc-700 bg-zinc-50 border border-zinc-200 px-3 py-2 rounded-lg">
-            <Clock className="w-3.5 h-3.5 text-purple-900" />
-            <span className="font-mono font-bold text-purple-950">6:40 PM</span>
-            <span className="text-zinc-500 hidden md:inline">| Market Closing Window</span>
+          <div className="flex items-center gap-2 text-xs text-[#171717] bg-[#FAFAF9] border border-[#E7E5E4] px-3 py-2 rounded-lg">
+            <Clock className="w-3.5 h-3.5 text-[#C7862B]" />
+            <span className="font-mono font-bold text-[#0A0A0A]">6:40 PM</span>
+            <span className="text-[#737373] hidden md:inline">| Market Closing Window</span>
           </div>
 
           <Button

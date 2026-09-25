@@ -4,14 +4,22 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { Incident } from '@/types';
 import { generateBroadcastSummary } from '@/lib/deepseek';
-import { Copy, Check, X, Share2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Copy, Check, Share2, X } from 'lucide-react';
 
 interface BroadcastModalProps {
   incident: Incident;
+  open?: boolean;
   onClose: () => void;
 }
 
-export function BroadcastModal({ incident, onClose }: BroadcastModalProps) {
+export function BroadcastModal({ incident, open = true, onClose }: BroadcastModalProps) {
   const [copied, setCopied] = useState(false);
 
   const facts = [
@@ -37,63 +45,77 @@ export function BroadcastModal({ incident, onClose }: BroadcastModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white border border-[#E7E5E4] rounded-lg max-w-lg w-full p-5 shadow-xl space-y-4">
-        <div className="flex items-center justify-between border-b border-[#F5F5F4] pb-3">
-          <div className="flex items-center gap-2">
-            <Share2 className="w-4 h-4 text-[#C7862B]" />
-            <h3 className="text-sm font-bold text-[#0A0A0A] tracking-tight">
-              Calm Broadcast Notice
-            </h3>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-lg w-full p-0 bg-transparent border-none shadow-none ring-0 overflow-hidden"
+      >
+        <div className="p-2 rounded-[2.5rem] bg-black/5 border border-black/5 shadow-2xl">
+          <div className="bg-white rounded-[calc(2.5rem-0.5rem)] p-6 sm:p-8 space-y-5">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-[#F5F5F4]">
+              <DialogHeader className="flex flex-row items-center gap-2.5 p-0 space-y-0 text-left">
+                <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-[#C7862B] shrink-0">
+                  <Share2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <DialogTitle className="text-base font-bold text-[#0A0A0A] tracking-tight">
+                    Calm Broadcast Template
+                  </DialogTitle>
+                </div>
+              </DialogHeader>
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-8 h-8 rounded-full border border-[#E7E5E4] text-[#737373] hover:text-[#0A0A0A] hover:border-[#0A0A0A] flex items-center justify-center transition-colors shrink-0"
+              >
+                <X className="w-4 h-4" />
+                <span className="sr-only">Close</span>
+              </button>
+            </div>
+
+            <DialogDescription className="text-xs text-[#57534E] leading-relaxed">
+              Pre-formatted for WhatsApp community groups and local radio desks. Written in calm, factual language to avoid panic amplification.
+            </DialogDescription>
+
+            <div className="relative">
+              <textarea
+                readOnly
+                rows={9}
+                value={broadcastText}
+                className="w-full text-xs font-mono p-4 rounded-2xl bg-[#FAFAF9] border border-[#E7E5E4] text-[#171717] focus:outline-none resize-none leading-relaxed"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#F5F5F4]">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-5 py-2.5 rounded-full text-xs font-semibold text-[#737373] hover:text-[#0A0A0A]"
+              >
+                Dismiss
+              </button>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="px-6 py-2.5 rounded-full bg-[#0A0A0A] text-white text-xs font-bold hover:bg-[#262626] transition-transform active:scale-[0.98] flex items-center gap-2 min-h-[44px]"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-400" />
+                    <span>Copied to Clipboard</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4 text-[#C7862B]" />
+                    <span>Copy WhatsApp Notice</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-[#737373] hover:text-[#0A0A0A] p-1 rounded hover:bg-[#F5F5F4]"
-          >
-            <X className="w-4 h-4" />
-          </button>
         </div>
-
-        <p className="text-xs text-[#57534E]">
-          Pre-formatted for WhatsApp community groups, local SMS gateways, and radio desks. Explicitly avoids panic-inducing words.
-        </p>
-
-        <div className="relative">
-          <textarea
-            readOnly
-            rows={10}
-            value={broadcastText}
-            className="w-full text-xs font-mono p-3 rounded bg-[#FAFAF9] border border-[#E7E5E4] text-[#171717] focus:outline-none"
-          />
-        </div>
-
-        <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#F5F5F4]">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-3 py-2 rounded text-xs font-medium text-[#737373] hover:bg-[#F5F5F4]"
-          >
-            Dismiss
-          </button>
-          <button
-            type="button"
-            onClick={handleCopy}
-            className="px-4 py-2 rounded bg-[#0A0A0A] text-[#FAFAF9] text-xs font-bold hover:bg-[#262626] flex items-center gap-1.5 min-h-[44px]"
-          >
-            {copied ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Copied to Clipboard</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-3.5 h-3.5 text-[#C7862B]" />
-                <span>Copy WhatsApp Notice</span>
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

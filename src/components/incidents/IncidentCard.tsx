@@ -4,7 +4,16 @@ import React from 'react';
 import { Incident, IncidentState } from '@/types';
 import { calculateHaversineDistance, formatDistanceBand } from '@/lib/haversine';
 import { signalStore } from '@/lib/store';
-import { AlertCircle, CheckCircle2, Clock, MapPin, ShieldAlert, Eye, MessageSquareQuote } from 'lucide-react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  MapPin,
+  ShieldAlert,
+  Eye,
+  MessageSquareQuote,
+  ArrowUpRight,
+} from 'lucide-react';
 
 interface IncidentCardProps {
   incident: Incident;
@@ -17,21 +26,23 @@ export function IncidentCard({ incident, onClick }: IncidentCardProps) {
     latitude: incident.latitude || 0,
     longitude: incident.longitude || 0,
   };
-  const distanceKm = typeof incident.distanceKm === 'number'
-    ? incident.distanceKm
-    : calculateHaversineDistance(userCoords, incCoords);
-  const distanceBand = formatDistanceBand(distanceKm, incident.approximateArea || incident.locationLabel);
+  const distanceKm =
+    typeof incident.distanceKm === 'number'
+      ? incident.distanceKm
+      : calculateHaversineDistance(userCoords, incCoords);
+  const distanceBand = formatDistanceBand(
+    distanceKm,
+    incident.approximateArea || incident.locationLabel
+  );
 
   const reportTime = incident.firstReportedAt || incident.createdAt || new Date().toISOString();
   const expireTime = incident.expiresAt || new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
-  // Time elapsed calculation
   const timeElapsedMinutes = Math.max(
     1,
     Math.round((Date.now() - new Date(reportTime).getTime()) / (1000 * 60))
   );
 
-  // TTL decay time remaining
   const ttlRemainingMinutes = Math.max(
     0,
     Math.round((new Date(expireTime).getTime() - Date.now()) / (1000 * 60))
@@ -41,15 +52,15 @@ export function IncidentCard({ incident, onClick }: IncidentCardProps) {
     switch (state) {
       case 'CONFIRMED':
         return {
-          bg: 'bg-[#171717]',
+          bg: 'bg-[#0A0A0A]',
           text: 'text-[#FAFAF9]',
           border: 'border-[#0A0A0A]',
-          label: 'VERIFIED BY ANCHOR',
+          label: 'ANCHOR VERIFIED',
           icon: CheckCircle2,
         };
       case 'CORROBORATED':
         return {
-          bg: 'bg-amber-100',
+          bg: 'bg-amber-100/80',
           text: 'text-amber-950',
           border: 'border-amber-300',
           label: 'COMMUNITY REPORT (UNCONFIRMED)',
@@ -57,7 +68,7 @@ export function IncidentCard({ incident, onClick }: IncidentCardProps) {
         };
       case 'CONFLICTING':
         return {
-          bg: 'bg-rose-100',
+          bg: 'bg-rose-100/80',
           text: 'text-rose-950',
           border: 'border-rose-300',
           label: 'CONFLICTING OBSERVATIONS',
@@ -68,13 +79,13 @@ export function IncidentCard({ incident, onClick }: IncidentCardProps) {
           bg: 'bg-stone-100',
           text: 'text-stone-700',
           border: 'border-stone-300',
-          label: 'STALE (AWAITING UPDATE)',
+          label: 'STALE (EXPIRED)',
           icon: Clock,
         };
       case 'RESOLVED':
         return {
-          bg: 'bg-emerald-100',
-          text: 'text-emerald-900',
+          bg: 'bg-emerald-100/80',
+          text: 'text-emerald-950',
           border: 'border-emerald-300',
           label: 'RESOLVED',
           icon: CheckCircle2,
@@ -85,7 +96,7 @@ export function IncidentCard({ incident, onClick }: IncidentCardProps) {
           bg: 'bg-[#F5F5F4]',
           text: 'text-[#44403C]',
           border: 'border-[#D6D3D1]',
-          label: 'UNVERIFIED OBSERVATION',
+          label: 'UNVERIFIED SIGHTING',
           icon: Eye,
         };
     }
@@ -97,7 +108,7 @@ export function IncidentCard({ incident, onClick }: IncidentCardProps) {
   return (
     <article
       onClick={onClick}
-      className="bg-white border border-[#E7E5E4] hover:border-[#A8A29E] rounded-lg p-4 cursor-pointer transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0A0A0A]"
+      className="group relative bg-white border border-[#E7E5E4] hover:border-[#0A0A0A] rounded-[2rem] p-6 sm:p-8 cursor-pointer transition-all duration-300 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_32px_-8px_rgba(0,0,0,0.08)] focus:outline-none focus:ring-2 focus:ring-[#0A0A0A]"
       tabIndex={0}
       role="button"
       onKeyDown={(e) => {
@@ -107,64 +118,74 @@ export function IncidentCard({ incident, onClick }: IncidentCardProps) {
         }
       }}
     >
-      {/* Top Badge & Distance Row */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+      {/* Top Meta Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div
-          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold tracking-tight border ${badge.bg} ${badge.text} ${badge.border}`}
+          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-tight border ${badge.bg} ${badge.text} ${badge.border}`}
         >
-          <BadgeIcon className="w-3 h-3" />
+          <BadgeIcon className="w-3.5 h-3.5" />
           <span>{badge.label}</span>
         </div>
 
-        <div className="text-[11px] font-semibold text-[#6B6B68] flex items-center gap-1">
-          <MapPin className="w-3 h-3 text-[#C7862B]" />
-          <span>{distanceBand}</span>
+        <div className="flex items-center gap-2 text-xs font-semibold text-[#6B6B68]">
+          <span className="flex items-center gap-1 bg-[#FAFAF9] border border-[#E7E5E4] px-2.5 py-1 rounded-full">
+            <MapPin className="w-3.5 h-3.5 text-[#C7862B]" />
+            <span>{distanceBand}</span>
+          </span>
+          <span className="text-[11px] text-[#A8A29E]">
+            {distanceKm.toFixed(1)} km
+          </span>
         </div>
       </div>
 
-      {/* Incident Title */}
-      <h3 className="font-bold text-base text-[#0A0A0A] tracking-tight leading-snug mb-1.5">
-        {incident.title}
-      </h3>
+      {/* Incident Title & Arrow */}
+      <div className="flex items-start justify-between gap-4 mb-3">
+        <h3 className="font-bold text-xl sm:text-2xl text-[#0A0A0A] tracking-tight leading-snug group-hover:text-[#C7862B] transition-colors">
+          {incident.title}
+        </h3>
+        <div className="w-8 h-8 rounded-full bg-[#FAFAF9] border border-[#E7E5E4] flex items-center justify-center shrink-0 group-hover:bg-[#0A0A0A] group-hover:border-[#0A0A0A] group-hover:text-white transition-all">
+          <ArrowUpRight className="w-4 h-4" />
+        </div>
+      </div>
 
-      {/* Location Label */}
-      <p className="text-xs text-[#57534E] mb-3 flex items-center gap-1">
-        <span>Location:</span>
-        <span className="font-medium text-[#1C1917]">{incident.locationLabel}</span>
+      {/* Location */}
+      <p className="text-sm text-[#57534E] mb-4 flex items-center gap-1.5 font-medium">
+        <span className="text-[#737373]">Location:</span>
+        <span className="text-[#0A0A0A]">{incident.locationLabel}</span>
       </p>
 
-      {/* Synthesis or Latest Ground Fact */}
-      <p className="text-xs text-[#292524] bg-[#FAFAF9] border border-[#F5F5F4] p-2.5 rounded mb-3 leading-relaxed">
+      {/* Synthesis Summary */}
+      <p className="text-sm text-[#292524] bg-[#FAFAF9] border border-[#F5F5F4] p-4 rounded-2xl mb-5 leading-relaxed">
         {incident.synthesisSummary}
       </p>
 
-      {/* Footer Metrics Row */}
-      <div className="flex flex-wrap items-center justify-between text-[11px] text-[#737373] pt-2.5 border-t border-[#F5F5F4] gap-2">
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1 text-[#1C1917] font-semibold">
+      {/* Discrepancy Matrix Row */}
+      <div className="flex flex-wrap items-center justify-between text-xs text-[#737373] pt-4 border-t border-[#F5F5F4] gap-3">
+        <div className="flex items-center gap-2 sm:gap-4 flex-wrap font-semibold">
+          <span className="inline-flex items-center gap-1.5 text-[#0A0A0A] bg-[#FAFAF9] border border-[#E7E5E4] px-2.5 py-1 rounded-lg">
             <Eye className="w-3.5 h-3.5 text-[#0A0A0A]" />
-            {incident.firsthandCount} Firsthand
+            <span>{incident.firsthandCount} Firsthand</span>
           </span>
 
           {incident.contradictionCount > 0 && (
-            <span className="flex items-center gap-1 text-[#991B1B] font-bold">
+            <span className="inline-flex items-center gap-1.5 text-[#991B1B] bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg font-bold">
               <ShieldAlert className="w-3.5 h-3.5" />
-              {incident.contradictionCount} Contradiction
+              <span>{incident.contradictionCount} Contradiction</span>
             </span>
           )}
 
           {incident.hearsayCount > 0 && (
-            <span className="flex items-center gap-1 text-[#78716C]">
-              <MessageSquareQuote className="w-3.5 h-3.5" />
-              {incident.hearsayCount} Hearsay
+            <span className="inline-flex items-center gap-1.5 text-[#57534E] bg-[#FAFAF9] border border-[#E7E5E4] px-2.5 py-1 rounded-lg">
+              <MessageSquareQuote className="w-3.5 h-3.5 text-[#78716C]" />
+              <span>{incident.hearsayCount} Hearsay</span>
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <span>Reported {timeElapsedMinutes}m ago</span>
+        <div className="flex items-center gap-2 text-[11px] font-medium text-[#737373]">
+          <span>{timeElapsedMinutes}m ago</span>
           {incident.state !== 'RESOLVED' && incident.state !== 'STALE' && (
-            <span className="text-[10px] text-[#78716C] bg-[#F5F5F4] px-1.5 py-0.5 rounded">
+            <span className="bg-[#F5F5F4] text-[#737373] px-2 py-0.5 rounded-full font-mono">
               expires in {ttlRemainingMinutes}m
             </span>
           )}

@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { signalStore } from '@/lib/store';
+import { useAuth } from '@/context/AuthContext';
 import { UserRole } from '@/types';
+import { RouteGuard } from '@/components/auth/RouteGuard';
 import {
   User,
   Shield,
@@ -11,21 +13,16 @@ import {
   Bell,
   RotateCcw,
   CheckCircle2,
-  Lock,
+  LogOut,
+  Sparkles,
 } from 'lucide-react';
 
 export default function ProfilePage() {
-  const [currentUser, setCurrentUser] = useState(signalStore.getCurrentUser());
+  const { user, logout } = useAuth();
+  const currentUser = user || signalStore.getCurrentUser();
   const [radiusKm, setRadiusKm] = useState(currentUser.notificationRadiusKm || 5.0);
   const [locationPref, setLocationPref] = useState(currentUser.locationPermission);
   const [resetSuccess, setResetSuccess] = useState(false);
-
-  useEffect(() => {
-    const unsubscribe = signalStore.subscribe(() => {
-      setCurrentUser(signalStore.getCurrentUser());
-    });
-    return () => unsubscribe();
-  }, []);
 
   const handleRoleSwitch = (role: UserRole) => {
     signalStore.switchRole(role);
@@ -45,185 +42,211 @@ export default function ProfilePage() {
     signalStore.resetToDefaultSeed();
     setResetSuccess(true);
     toast.success('Scenario seed data restored', {
-      description: 'Reset to initial 4 crisis situations and default user profile.',
+      description: 'Reset to initial crisis situations and default user profile.',
     });
     setTimeout(() => setResetSuccess(false), 2500);
   };
 
   return (
-    <div className="space-y-5 max-w-2xl mx-auto text-[#0A0A0A]">
-      <div>
-        <h1 className="text-lg sm:text-xl font-bold text-[#0A0A0A] tracking-tight mb-1">
-          Account
-        </h1>
-        <p className="text-xs text-[#57534E]">
-          Role, perimeter preferences, and demo persona switcher.
-        </p>
-      </div>
-
-      <div className="bg-white border border-[#E7E5E4] rounded-lg p-4 sm:p-5 space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-[#737373]">
-          User Identity
-        </h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-          <div>
-            <span className="text-[#737373] block mb-0.5">Full Name:</span>
-            <span className="font-bold text-[#0A0A0A]">{currentUser.name}</span>
+    <div className="space-y-8 max-w-4xl mx-auto pb-16 text-[#0A0A0A]">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-4 pb-2 border-b border-[#E7E5E4]">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0A0A0A] text-white text-xs font-bold uppercase tracking-wider">
+              <User className="w-3.5 h-3.5 text-[#C7862B]" />
+              <span>Account & Corridor Preferences</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#0A0A0A]">
+              Account Profile
+            </h1>
+            <p className="text-sm text-[#57534E]">
+              Corridor permissions, alert radius preferences, and demo role simulator.
+            </p>
           </div>
-          <div>
-            <span className="text-[#737373] block mb-0.5">Contact Channel:</span>
-            <span className="font-bold text-[#0A0A0A]">{currentUser.emailOrPhone}</span>
+
+          <button
+            onClick={() => logout()}
+            className="px-5 py-2.5 rounded-full border border-rose-200 bg-rose-50 text-[#991B1B] text-xs font-bold hover:bg-rose-100 flex items-center gap-2 transition-all active:scale-[0.98] self-start sm:self-auto"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out</span>
+          </button>
+        </div>
+
+        {/* Identity Double-Bezel Card */}
+        <div className="p-2 rounded-[2.5rem] bg-black/5 border border-black/5 shadow-xs">
+          <div className="bg-white rounded-[calc(2.5rem-0.5rem)] p-8 sm:p-10 space-y-6">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#737373]">
+              User Identity
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-[#737373] block">Full Name:</span>
+                <span className="text-lg font-bold text-[#0A0A0A]">{currentUser.name}</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-[#737373] block">Contact Channel:</span>
+                <span className="text-lg font-bold text-[#0A0A0A]">{currentUser.emailOrPhone}</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-[#737373] block">Assigned Role:</span>
+                <span className="inline-flex items-center gap-1.5 font-bold text-[#0A0A0A] px-3 py-1 rounded-full bg-[#FAFAF9] border border-[#E7E5E4] text-xs">
+                  <Shield className="w-3.5 h-3.5 text-[#C7862B]" />
+                  <span>{currentUser.role}</span>
+                </span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-[#737373] block">Account Status:</span>
+                <span className="inline-flex items-center gap-1.5 font-bold text-emerald-800 text-xs">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{currentUser.status}</span>
+                </span>
+              </div>
+            </div>
+
+            {currentUser.assignedCorridor && (
+              <div className="pt-4 border-t border-[#F5F5F4] text-xs flex items-center gap-2">
+                <span className="text-[#737373]">Assigned Corridor Jurisdiction:</span>
+                <span className="font-bold text-[#0A0A0A]">{currentUser.assignedCorridor}</span>
+              </div>
+            )}
           </div>
-          <div>
-            <span className="text-[#737373] block mb-0.5">Account Role (Read-Only):</span>
-            <span className="inline-flex items-center gap-1 font-bold text-[#0A0A0A] px-2 py-0.5 rounded bg-[#FAFAF9] border border-[#E7E5E4]">
-              <Shield className="w-3.5 h-3.5 text-[#C7862B]" />
-              <span>{currentUser.role}</span>
+        </div>
+
+        {/* Persona Simulator */}
+        <div className="bg-white border border-[#E7E5E4] rounded-[2rem] p-8 sm:p-10 space-y-6 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 className="text-xl font-bold text-[#0A0A0A] tracking-tight">
+                Simulate Role Persona
+              </h3>
+              <p className="text-sm text-[#57534E] mt-1">
+                Test how the triage interface adapts for residents, corridor anchors, and moderators.
+              </p>
+            </div>
+            <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-950 text-xs font-bold self-start">
+              Demo Testing Tool
             </span>
           </div>
-          <div>
-            <span className="text-[#737373] block mb-0.5">Account Status:</span>
-            <span className="inline-flex items-center gap-1 font-bold text-emerald-800">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>{currentUser.status}</span>
-            </span>
-          </div>
-        </div>
 
-        {currentUser.assignedCorridor && (
-          <div className="pt-2 border-t border-[#F5F5F4] text-xs">
-            <span className="text-[#737373]">Assigned Corridor Jurisdiction: </span>
-            <span className="font-bold text-[#0A0A0A]">{currentUser.assignedCorridor}</span>
-          </div>
-        )}
-      </div>
-
-      <div className="bg-white border border-[#E7E5E4] rounded-lg p-4 sm:p-5 space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-[#737373]">
-            Simulate User Persona & Permissions
-          </h3>
-          <span className="text-[11px] text-[#C7862B] font-semibold">Demo Testing Utility</span>
-        </div>
-        <p className="text-xs text-[#57534E]">
-          Switch roles dynamically to inspect how the crisis triage UI adapts for local residents, corridor anchors, and moderators.
-        </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-          <button
-            onClick={() => handleRoleSwitch('RESIDENT')}
-            className={`p-3 rounded border text-left text-xs transition-colors min-h-[44px] ${
-              currentUser.role === 'RESIDENT'
-                ? 'border-[#0A0A0A] bg-[#0A0A0A] text-[#FAFAF9]'
-                : 'border-[#E7E5E4] bg-[#FAFAF9] text-[#171717] hover:bg-[#F5F5F4]'
-            }`}
-          >
-            <div className="font-bold mb-0.5">Amara Okoye (Resident)</div>
-            <div className="text-[11px] opacity-80">
-              Logged-in resident at Lugbe Market. Can submit reports and attestations.
-            </div>
-          </button>
-
-          <button
-            onClick={() => handleRoleSwitch('ANCHOR')}
-            className={`p-3 rounded border text-left text-xs transition-colors min-h-[44px] ${
-              currentUser.role === 'ANCHOR'
-                ? 'border-[#0A0A0A] bg-[#0A0A0A] text-[#FAFAF9]'
-                : 'border-[#E7E5E4] bg-[#FAFAF9] text-[#171717] hover:bg-[#F5F5F4]'
-            }`}
-          >
-            <div className="font-bold mb-0.5">Musa Ibrahim (Stationary Anchor)</div>
-            <div className="text-[11px] opacity-80">
-              NURTW Unit Chair. Can formally confirm or resolve corridor incidents.
-            </div>
-          </button>
-
-          <button
-            onClick={() => handleRoleSwitch('MODERATOR')}
-            className={`p-3 rounded border text-left text-xs transition-colors min-h-[44px] ${
-              currentUser.role === 'MODERATOR'
-                ? 'border-[#0A0A0A] bg-[#0A0A0A] text-[#FAFAF9]'
-                : 'border-[#E7E5E4] bg-[#FAFAF9] text-[#171717] hover:bg-[#F5F5F4]'
-            }`}
-          >
-            <div className="font-bold mb-0.5">Tari Davies (Field Moderator)</div>
-            <div className="text-[11px] opacity-80">
-              Can quarantine viral chains, audit duplicate patterns, and inspect raw coordinates.
-            </div>
-          </button>
-
-          <button
-            onClick={() => handleRoleSwitch('ADMIN')}
-            className={`p-3 rounded border text-left text-xs transition-colors min-h-[44px] ${
-              currentUser.role === 'ADMIN'
-                ? 'border-[#0A0A0A] bg-[#0A0A0A] text-[#FAFAF9]'
-                : 'border-[#E7E5E4] bg-[#FAFAF9] text-[#171717] hover:bg-[#F5F5F4]'
-            }`}
-          >
-            <div className="font-bold mb-0.5">Adaeze Nwosu (Administrator)</div>
-            <div className="text-[11px] opacity-80">
-              Can view full audit logs, user permissions, and system settings.
-            </div>
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-white border border-[#E7E5E4] rounded-lg p-4 sm:p-5 space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-[#737373]">
-          Perimeter Preferences
-        </h3>
-
-        <div className="space-y-3 text-xs">
-          <div>
-            <label className="block font-semibold text-[#171717] mb-1">
-              Alert radius
-            </label>
-            <select
-              value={radiusKm}
-              onChange={(e) => handleRadiusChange(Number(e.target.value))}
-              className="w-full p-2 rounded border border-[#D6D3D1] bg-white text-[#0A0A0A]"
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <button
+              onClick={() => handleRoleSwitch('RESIDENT')}
+              className={`p-5 rounded-2xl border text-left transition-all ${
+                currentUser.role === 'RESIDENT'
+                  ? 'border-[#0A0A0A] bg-[#0A0A0A] text-white shadow-md'
+                  : 'border-[#E7E5E4] bg-[#FAFAF9] text-[#171717] hover:border-[#0A0A0A]'
+              }`}
             >
-              <option value={1.5}>1.5 km (immediate neighborhood)</option>
-              <option value={5.0}>5.0 km (standard alert perimeter)</option>
-              <option value={10.0}>10.0 km (extended corridor)</option>
-            </select>
-          </div>
+              <div className="font-bold text-base mb-1">Amara Okoye (Resident)</div>
+              <div className={`text-xs ${currentUser.role === 'RESIDENT' ? 'text-gray-300' : 'text-[#737373]'}`}>
+                Lugbe Market resident. Can submit reports and ground attestations.
+              </div>
+            </button>
 
-          <div className="flex items-center gap-2 pt-1">
-            <input
-              type="checkbox"
-              id="locationPref"
-              checked={locationPref}
-              onChange={(e) => {
-                setLocationPref(e.target.checked);
-                toast.info('Location preference updated');
-              }}
-              className="w-4 h-4 rounded border-[#D6D3D1] text-[#0A0A0A]"
-            />
-            <label htmlFor="locationPref" className="text-xs text-[#292524] cursor-pointer">
-              Enable native one-tap device GPS for distance filtering (exact coordinates remain private).
-            </label>
+            <button
+              onClick={() => handleRoleSwitch('ANCHOR')}
+              className={`p-5 rounded-2xl border text-left transition-all ${
+                currentUser.role === 'ANCHOR' || currentUser.role === 'COMMUNITY_ANCHOR'
+                  ? 'border-[#0A0A0A] bg-[#0A0A0A] text-white shadow-md'
+                  : 'border-[#E7E5E4] bg-[#FAFAF9] text-[#171717] hover:border-[#0A0A0A]'
+              }`}
+            >
+              <div className="font-bold text-base mb-1">Musa Ibrahim (Stationary Anchor)</div>
+              <div className={`text-xs ${currentUser.role === 'ANCHOR' || currentUser.role === 'COMMUNITY_ANCHOR' ? 'text-gray-300' : 'text-[#737373]'}`}>
+                NURTW Unit Chair. Can formally confirm or resolve corridor incidents.
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleRoleSwitch('MODERATOR')}
+              className={`p-5 rounded-2xl border text-left transition-all ${
+                currentUser.role === 'MODERATOR'
+                  ? 'border-[#0A0A0A] bg-[#0A0A0A] text-white shadow-md'
+                  : 'border-[#E7E5E4] bg-[#FAFAF9] text-[#171717] hover:border-[#0A0A0A]'
+              }`}
+            >
+              <div className="font-bold text-base mb-1">Tari Davies (Field Moderator)</div>
+              <div className={`text-xs ${currentUser.role === 'MODERATOR' ? 'text-gray-300' : 'text-[#737373]'}`}>
+                Can quarantine viral rumor chains and audit duplicate patterns.
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleRoleSwitch('ADMIN')}
+              className={`p-5 rounded-2xl border text-left transition-all ${
+                currentUser.role === 'ADMIN'
+                  ? 'border-[#0A0A0A] bg-[#0A0A0A] text-white shadow-md'
+                  : 'border-[#E7E5E4] bg-[#FAFAF9] text-[#171717] hover:border-[#0A0A0A]'
+              }`}
+            >
+              <div className="font-bold text-base mb-1">Adaeze Nwosu (Administrator)</div>
+              <div className={`text-xs ${currentUser.role === 'ADMIN' ? 'text-gray-300' : 'text-[#737373]'}`}>
+                Can inspect full audit logs, user permissions, and system thresholds.
+              </div>
+            </button>
           </div>
         </div>
-      </div>
 
-      <div className="bg-white border border-[#E7E5E4] rounded-lg p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h4 className="text-xs font-bold text-[#0A0A0A]">Reset Scenario Seed Data</h4>
-          <p className="text-[11px] text-[#737373]">
-            Restores the initial 4 crisis situations and resets all in-memory attestations.
-          </p>
+        {/* Perimeter Settings */}
+        <div className="bg-white border border-[#E7E5E4] rounded-[2rem] p-8 sm:p-10 space-y-6 shadow-xs">
+          <h3 className="text-xl font-bold text-[#0A0A0A] tracking-tight">
+            Perimeter Notification Preferences
+          </h3>
+
+          <div className="space-y-4 max-w-lg">
+            <div className="space-y-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#737373]">
+                Alert Radius Threshold
+              </label>
+              <select
+                value={radiusKm}
+                onChange={(e) => handleRadiusChange(Number(e.target.value))}
+                className="w-full p-4 rounded-xl border border-[#D6D3D1] bg-white text-[#0A0A0A] text-sm font-semibold focus:outline-none focus:border-[#0A0A0A]"
+              >
+                <option value={1.5}>1.5 km (Immediate neighborhood)</option>
+                <option value={5.0}>5.0 km (Standard alert perimeter)</option>
+                <option value={10.0}>10.0 km (Extended corridor)</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <input
+                type="checkbox"
+                id="locationPref"
+                checked={locationPref}
+                onChange={(e) => {
+                  setLocationPref(e.target.checked);
+                  toast.info('Location preference updated');
+                }}
+                className="w-5 h-5 rounded border-[#D6D3D1] text-[#0A0A0A] focus:ring-0"
+              />
+              <label htmlFor="locationPref" className="text-xs text-[#57534E] cursor-pointer leading-relaxed">
+                Enable native device GPS for mathematical distance calculation (coordinates remain private).
+              </label>
+            </div>
+          </div>
         </div>
 
-        <button
-          onClick={handleResetData}
-          className="px-3.5 py-2 rounded border border-[#D6D3D1] hover:bg-[#F5F5F4] text-xs font-semibold text-[#171717] flex items-center gap-1.5 min-h-[44px]"
-        >
-          <RotateCcw className="w-3.5 h-3.5 text-[#737373]" />
-          <span>{resetSuccess ? 'Seed Data Restored' : 'Reset Seed Scenarios'}</span>
-        </button>
+        {/* Reset Seed Data */}
+        <div className="bg-white border border-[#E7E5E4] rounded-[2rem] p-8 sm:p-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+          <div className="space-y-1">
+            <h4 className="text-base font-bold text-[#0A0A0A]">Reset Scenario Seed Data</h4>
+            <p className="text-xs text-[#737373]">
+              Restores initial 4 crisis situations and resets in-memory attestations.
+            </p>
+          </div>
+
+          <button
+            onClick={handleResetData}
+            className="px-6 py-3 rounded-full border border-[#D6D3D1] hover:border-[#0A0A0A] bg-white text-xs font-bold text-[#0A0A0A] flex items-center gap-2 transition-all min-h-[44px] active:scale-[0.98]"
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-[#737373]" />
+            <span>{resetSuccess ? 'Seed Restored' : 'Reset Seed Data'}</span>
+          </button>
+        </div>
+
       </div>
-    </div>
   );
 }

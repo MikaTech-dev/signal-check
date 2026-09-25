@@ -6,6 +6,7 @@ import { Incident } from '@/types';
 import { calculateHaversineDistance, formatDistanceBand, maskCoordinates } from '@/lib/haversine';
 import { signalStore } from '@/lib/store';
 import { incidentsApi } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 import { AttestationForm } from './AttestationForm';
 import { BroadcastModal } from './BroadcastModal';
 import {
@@ -22,6 +23,7 @@ import {
   Plus,
   HelpCircle,
   Lock,
+  ArrowRight,
 } from 'lucide-react';
 
 interface IncidentDetailDrawerProps {
@@ -35,6 +37,7 @@ export function IncidentDetailDrawer({
   onClose,
   onUpdate,
 }: IncidentDetailDrawerProps) {
+  const { user } = useAuth();
   const [showAttestationForm, setShowAttestationForm] = useState(false);
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
   const [showAnchorConfirmDialog, setShowAnchorConfirmDialog] = useState(false);
@@ -42,16 +45,20 @@ export function IncidentDetailDrawer({
   const [showResolveDialog, setShowResolveDialog] = useState(false);
   const [resolveReason, setResolveReason] = useState('');
 
-  const currentUser = signalStore.getCurrentUser();
+  const currentUser = user || signalStore.getCurrentUser();
   const userCoords = signalStore.getUserCoordinates();
   const incCoords = incident.coordinates || {
     latitude: incident.latitude || 0,
     longitude: incident.longitude || 0,
   };
-  const distanceKm = typeof incident.distanceKm === 'number'
-    ? incident.distanceKm
-    : calculateHaversineDistance(userCoords, incCoords);
-  const distanceBand = formatDistanceBand(distanceKm, incident.approximateArea || incident.locationLabel);
+  const distanceKm =
+    typeof incident.distanceKm === 'number'
+      ? incident.distanceKm
+      : calculateHaversineDistance(userCoords, incCoords);
+  const distanceBand = formatDistanceBand(
+    distanceKm,
+    incident.approximateArea || incident.locationLabel
+  );
   const maskedCoords = maskCoordinates(incCoords);
 
   const reportTime = incident.firstReportedAt || incident.createdAt || new Date().toISOString();
@@ -113,115 +120,115 @@ export function IncidentDetailDrawer({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
-      <div className="bg-white border border-[#E7E5E4] rounded-t-xl sm:rounded-xl max-w-2xl w-full max-h-[90dvh] flex flex-col shadow-2xl overflow-hidden">
-        <div className="p-4 border-b border-[#E7E5E4] flex items-center justify-between bg-[#FAFAF9]">
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-[#0A0A0A] text-[#FAFAF9]">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div className="bg-white border border-[#E7E5E4] rounded-t-[2.5rem] sm:rounded-[2.5rem] max-w-2xl w-full max-h-[92dvh] flex flex-col shadow-2xl overflow-hidden">
+        
+        {/* Drawer Header */}
+        <div className="p-6 border-b border-[#E7E5E4] flex items-center justify-between bg-[#FAFAF9]">
+          <div className="flex items-center gap-3">
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#0A0A0A] text-white">
               {incident.incidentType.replace(/_/g, ' ')}
             </span>
             <span className="text-xs font-semibold text-[#737373]">{distanceBand}</span>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-md text-[#737373] hover:text-[#0A0A0A] hover:bg-[#F5F5F4] min-w-[36px] min-h-[36px] flex items-center justify-center"
+            className="w-10 h-10 rounded-full border border-[#E7E5E4] bg-white text-[#737373] hover:text-[#0A0A0A] hover:border-[#0A0A0A] flex items-center justify-center transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-5 flex-1 text-[#0A0A0A]">
-          <div className="p-3 rounded-lg bg-amber-50/60 border border-amber-200 text-xs text-amber-950 flex items-start gap-2.5">
-            <AlertTriangle className="w-4 h-4 text-[#C7862B] shrink-0 mt-0.5" />
-            <p className="leading-relaxed">
-              <strong>Heads up:</strong> These are community reports. They do not confirm the incident is real or any route safe.
-            </p>
-          </div>
-
-          <div>
-            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-[#0A0A0A] leading-snug mb-2">
+        {/* Drawer Scrollable Content */}
+        <div className="p-6 sm:p-8 overflow-y-auto space-y-6 flex-1 text-[#0A0A0A]">
+          
+          <div className="space-y-3">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0A0A0A] leading-snug">
               {incident.title}
             </h2>
             <div className="flex flex-wrap items-center gap-3 text-xs text-[#57534E]">
-              <span className="flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5 text-[#C7862B]" />
-                <span className="font-semibold text-[#171717]">{incident.locationLabel}</span>
+              <span className="flex items-center gap-1.5 font-semibold text-[#0A0A0A]">
+                <MapPin className="w-4 h-4 text-[#C7862B]" />
+                <span>{incident.locationLabel}</span>
               </span>
+              <span className="text-[#A8A29E]">&bull;</span>
               <span className="flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5" />
-                <span>Reported {timeElapsedMinutes} mins ago</span>
+                <Clock className="w-3.5 h-3.5 text-[#737373]" />
+                <span>Reported {timeElapsedMinutes}m ago</span>
               </span>
-              <span className="text-[11px] text-[#78716C] bg-[#F5F5F4] px-2 py-0.5 rounded">
+              <span className="text-[11px] text-[#737373] bg-[#FAFAF9] border border-[#E7E5E4] px-2.5 py-0.5 rounded-full font-mono">
                 Masked Coords: {maskedCoords.latitude.toFixed(2)}, {maskedCoords.longitude.toFixed(2)}
               </span>
             </div>
           </div>
 
-          <div className="bg-[#FAFAF9] border border-[#E7E5E4] rounded-lg p-3.5 space-y-2.5">
+          {/* Verification State & Discrepancy Matrix */}
+          <div className="bg-[#FAFAF9] border border-[#E7E5E4] rounded-2xl p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#57534E]">
-                Verification State
+              <span className="text-xs font-bold uppercase tracking-wider text-[#737373]">
+                Verification Status
               </span>
-              <span className="text-xs font-mono font-bold text-[#0A0A0A] px-2 py-0.5 rounded bg-white border border-[#D6D3D1]">
+              <span className="text-xs font-bold text-[#0A0A0A] px-3 py-1 rounded-full bg-white border border-[#D6D3D1]">
                 {incident.state}
               </span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 text-center pt-1">
-              <div className="p-2 rounded bg-white border border-[#E7E5E4]">
-                <div className="flex items-center justify-center gap-1 text-[#0A0A0A] font-bold text-sm">
-                  <Eye className="w-3.5 h-3.5" />
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="p-3 rounded-xl bg-white border border-[#E7E5E4]">
+                <div className="flex items-center justify-center gap-1.5 text-[#0A0A0A] font-bold text-base">
+                  <Eye className="w-4 h-4" />
                   <span>{incident.firsthandCount}</span>
                 </div>
-                <div className="text-[10px] text-[#737373] mt-0.5">Firsthand Sightings</div>
+                <div className="text-[11px] text-[#737373] mt-1 font-medium">Firsthand</div>
               </div>
 
-              <div className="p-2 rounded bg-white border border-[#E7E5E4]">
-                <div className="flex items-center justify-center gap-1 text-[#991B1B] font-bold text-sm">
-                  <ShieldAlert className="w-3.5 h-3.5" />
+              <div className="p-3 rounded-xl bg-white border border-[#E7E5E4]">
+                <div className="flex items-center justify-center gap-1.5 text-[#991B1B] font-bold text-base">
+                  <ShieldAlert className="w-4 h-4" />
                   <span>{incident.contradictionCount}</span>
                 </div>
-                <div className="text-[10px] text-[#737373] mt-0.5">Contradictions</div>
+                <div className="text-[11px] text-[#737373] mt-1 font-medium">Contradictions</div>
               </div>
 
-              <div className="p-2 rounded bg-white border border-[#E7E5E4]">
-                <div className="flex items-center justify-center gap-1 text-[#57534E] font-bold text-sm">
-                  <MessageSquareQuote className="w-3.5 h-3.5" />
+              <div className="p-3 rounded-xl bg-white border border-[#E7E5E4]">
+                <div className="flex items-center justify-center gap-1.5 text-[#57534E] font-bold text-base">
+                  <MessageSquareQuote className="w-4 h-4" />
                   <span>{incident.hearsayCount}</span>
                 </div>
-                <div className="text-[10px] text-[#737373] mt-0.5">Hearsay Volume</div>
+                <div className="text-[11px] text-[#737373] mt-1 font-medium">Hearsay Volume</div>
               </div>
             </div>
 
             {incident.confirmedByAnchor && (
-              <div className="mt-2 p-2.5 rounded bg-white border border-[#171717] text-xs">
-                <div className="flex items-center gap-1.5 font-bold text-[#0A0A0A] mb-1">
+              <div className="mt-3 p-3.5 rounded-xl bg-white border border-[#0A0A0A] text-xs">
+                <div className="flex items-center gap-2 font-bold text-[#0A0A0A] mb-1">
                   <CheckCircle2 className="w-4 h-4 text-[#C7862B]" />
                   <span>Confirmed by Anchor: {incident.confirmedByAnchor.anchorName}</span>
                 </div>
-                <p className="text-[11px] text-[#44403C]">
+                <p className="text-[11px] text-[#57534E]">
                   {incident.confirmedByAnchor.anchorTitle} &bull; {incident.confirmedByAnchor.notes}
                 </p>
               </div>
             )}
           </div>
 
-          <div className="space-y-3">
+          {/* Observations Timeline */}
+          <div className="space-y-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-[#737373]">
-              Ground reports
+              Ground Observations Log
             </h3>
 
-            <div className="space-y-1.5">
-              <div className="text-xs font-semibold text-[#171717] flex items-center gap-1">
+            <div className="space-y-2">
+              <div className="text-xs font-bold text-[#0A0A0A] flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-[#0A0A0A]" />
-                <span>Supporting Observations ({incident.supportingFacts.length})</span>
+                <span>Supporting Sightings ({incident.supportingFacts.length})</span>
               </div>
               {incident.supportingFacts.length === 0 ? (
-                <p className="text-xs text-[#737373] italic pl-3">No supporting statements logged yet.</p>
+                <p className="text-xs text-[#737373] italic pl-3.5">No supporting observations logged yet.</p>
               ) : (
-                <div className="space-y-1 pl-3">
+                <div className="space-y-1.5 pl-3.5">
                   {incident.supportingFacts.map((fact, idx) => (
-                    <div key={idx} className="p-2 rounded bg-[#FAFAF9] border border-[#F5F5F4] text-xs leading-relaxed">
+                    <div key={idx} className="p-3 rounded-xl bg-[#FAFAF9] border border-[#F5F5F4] text-xs leading-relaxed text-[#171717]">
                       {fact}
                     </div>
                   ))}
@@ -230,14 +237,14 @@ export function IncidentDetailDrawer({
             </div>
 
             {incident.contradictingFacts.length > 0 && (
-              <div className="space-y-1.5 pt-1">
-                <div className="text-xs font-semibold text-[#991B1B] flex items-center gap-1">
+              <div className="space-y-2 pt-2">
+                <div className="text-xs font-bold text-[#991B1B] flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-[#991B1B]" />
                   <span>Active Contradictions ({incident.contradictingFacts.length})</span>
                 </div>
-                <div className="space-y-1 pl-3">
+                <div className="space-y-1.5 pl-3.5">
                   {incident.contradictingFacts.map((fact, idx) => (
-                    <div key={idx} className="p-2 rounded bg-rose-50/50 border border-rose-200 text-xs text-rose-950 leading-relaxed">
+                    <div key={idx} className="p-3 rounded-xl bg-rose-50/60 border border-rose-200 text-xs text-rose-950 leading-relaxed">
                       {fact}
                     </div>
                   ))}
@@ -246,13 +253,14 @@ export function IncidentDetailDrawer({
             )}
           </div>
 
+          {/* Critical Missing Details */}
           {incident.missingDetails.length > 0 && (
-            <div className="p-3.5 rounded-lg bg-stone-50 border border-stone-200 space-y-1.5">
-              <h4 className="text-xs font-bold text-[#1C1917] flex items-center gap-1.5">
-                <HelpCircle className="w-3.5 h-3.5 text-[#C7862B]" />
-                <span>Critical Missing Information Needed:</span>
+            <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-200 space-y-2">
+              <h4 className="text-xs font-bold text-amber-950 flex items-center gap-2">
+                <HelpCircle className="w-4 h-4 text-[#C7862B]" />
+                <span>Missing Specific Information Needed:</span>
               </h4>
-              <ul className="text-xs text-[#57534E] space-y-1 pl-4 list-disc">
+              <ul className="text-xs text-amber-900 space-y-1 pl-5 list-disc">
                 {incident.missingDetails.map((detail, idx) => (
                   <li key={idx}>{detail}</li>
                 ))}
@@ -260,19 +268,20 @@ export function IncidentDetailDrawer({
             </div>
           )}
 
-          <div className="p-3.5 rounded-lg bg-[#0A0A0A] text-[#FAFAF9] space-y-2">
-            <div className="flex items-center gap-1.5">
+          {/* Verification Coach */}
+          <div className="p-5 rounded-2xl bg-[#0A0A0A] text-[#FAFAF9] space-y-3">
+            <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#C7862B]" />
-              <h4 className="text-xs font-bold tracking-tight text-[#FAFAF9]">
-                How to verify this safely
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#FAFAF9]">
+                Safe Verification Checks
               </h4>
             </div>
-            <p className="text-[11px] text-[#A8A29E] leading-relaxed">
-              Low-risk checks. Do not travel toward unconfirmed locations.
+            <p className="text-xs text-[#A8A29E] leading-relaxed">
+              Low-risk verification methods. Do not travel toward active disruptions.
             </p>
-            <div className="space-y-1.5 pt-1">
+            <div className="space-y-2 pt-1">
               {incident.suggestedVerificationChecks.map((check, idx) => (
-                <div key={idx} className="text-xs text-[#E7E5E4] flex items-start gap-2 bg-[#171717] p-2 rounded">
+                <div key={idx} className="text-xs text-[#E7E5E4] flex items-start gap-2 bg-[#171717] p-3 rounded-xl border border-white/5">
                   <span className="text-[#C7862B] font-bold">{idx + 1}.</span>
                   <span>{check}</span>
                 </div>
@@ -280,6 +289,7 @@ export function IncidentDetailDrawer({
             </div>
           </div>
 
+          {/* Actions: Attestation & Broadcast */}
           {showAttestationForm ? (
             <AttestationForm
               incident={incident}
@@ -287,18 +297,18 @@ export function IncidentDetailDrawer({
               onCancel={() => setShowAttestationForm(false)}
             />
           ) : (
-            <div className="flex flex-wrap gap-2 pt-2">
+            <div className="flex flex-wrap gap-3 pt-2">
               <button
                 onClick={() => setShowAttestationForm(true)}
-                className="flex-1 min-h-[44px] px-4 py-2.5 rounded bg-[#0A0A0A] text-[#FAFAF9] text-xs font-bold hover:bg-[#262626] active:scale-[0.98] transition-transform flex items-center justify-center gap-2 shadow-sm"
+                className="group flex-1 min-h-[48px] px-6 py-3 rounded-full bg-[#0A0A0A] text-white text-xs font-bold hover:bg-[#262626] active:scale-[0.98] transition-transform flex items-center justify-center gap-2.5 shadow-sm"
               >
                 <Plus className="w-4 h-4 text-[#C7862B]" />
-                <span>Add attestation</span>
+                <span>Add Attestation</span>
               </button>
 
               <button
                 onClick={() => setShowBroadcastModal(true)}
-                className="px-4 py-2.5 min-h-[44px] rounded border border-[#D6D3D1] bg-white text-[#171717] text-xs font-semibold hover:bg-[#F5F5F4] flex items-center justify-center gap-1.5"
+                className="px-6 py-3 min-h-[48px] rounded-full border border-[#D6D3D1] bg-white text-[#0A0A0A] text-xs font-bold hover:border-[#0A0A0A] flex items-center justify-center gap-2 transition-colors"
               >
                 <Share2 className="w-4 h-4 text-[#737373]" />
                 <span>Broadcast Notice</span>
@@ -306,77 +316,81 @@ export function IncidentDetailDrawer({
             </div>
           )}
 
-          {(currentUser.role === 'ANCHOR' || currentUser.role === 'COMMUNITY_ANCHOR' || currentUser.role === 'ADMIN') && incident.state !== 'CONFIRMED' && incident.state !== 'RESOLVED' && (
-            <div className="p-3.5 rounded-lg border border-[#0A0A0A] bg-amber-50/30 space-y-2">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-[#0A0A0A]">
-                <ShieldCheck className="w-4 h-4 text-[#C7862B]" />
-                <span>Designated Anchor Actions ({currentUser.name})</span>
-              </div>
-              <p className="text-[11px] text-[#57534E]">
-                As a verified corridor anchor, you can formally confirm or resolve this incident.
-              </p>
-
-              {showAnchorConfirmDialog ? (
-                <div className="space-y-2 pt-2">
-                  <textarea
-                    rows={2}
-                    value={anchorNotes}
-                    onChange={(e) => setAnchorNotes(e.target.value)}
-                    placeholder="Enter on-site verification notes (e.g., Confirmed with union desk at gate)..."
-                    className="w-full text-xs p-2 rounded border border-[#D6D3D1] bg-white"
-                  />
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => setShowAnchorConfirmDialog(false)}
-                      className="text-xs px-3 py-1.5 text-[#737373]"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleAnchorConfirm}
-                      className="px-4 py-2 rounded bg-[#0A0A0A] text-[#FAFAF9] text-xs font-bold"
-                    >
-                      Confirm and Broadcast
-                    </button>
-                  </div>
+          {/* Anchor Confirmation Panel */}
+          {(currentUser.role === 'ANCHOR' || currentUser.role === 'COMMUNITY_ANCHOR' || currentUser.role === 'ADMIN') &&
+            incident.state !== 'CONFIRMED' &&
+            incident.state !== 'RESOLVED' && (
+              <div className="p-5 rounded-2xl border border-[#0A0A0A] bg-amber-50/40 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#0A0A0A]">
+                  <ShieldCheck className="w-4 h-4 text-[#C7862B]" />
+                  <span>Designated Anchor Action ({currentUser.name})</span>
                 </div>
-              ) : (
-                <button
-                  onClick={() => setShowAnchorConfirmDialog(true)}
-                  className="w-full py-2 rounded border border-[#0A0A0A] bg-[#0A0A0A] text-[#FAFAF9] text-xs font-bold min-h-[44px]"
-                >
-                  Formally Confirm Incident as Anchor
-                </button>
-              )}
-            </div>
-          )}
+                <p className="text-xs text-[#57534E]">
+                  As a stationary corridor anchor, you can formally confirm this observation and trigger a 5 km perimeter alert.
+                </p>
 
+                {showAnchorConfirmDialog ? (
+                  <div className="space-y-3 pt-2">
+                    <textarea
+                      rows={2}
+                      value={anchorNotes}
+                      onChange={(e) => setAnchorNotes(e.target.value)}
+                      placeholder="Enter on-site verification notes (e.g. Confirmed with market gate warden)..."
+                      className="w-full text-xs p-3 rounded-xl border border-[#D6D3D1] bg-white text-[#0A0A0A] focus:outline-none focus:border-[#0A0A0A]"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => setShowAnchorConfirmDialog(false)}
+                        className="text-xs px-4 py-2 text-[#737373] hover:text-[#0A0A0A] font-semibold"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleAnchorConfirm}
+                        className="px-6 py-2.5 rounded-full bg-[#0A0A0A] text-white text-xs font-bold hover:bg-[#262626]"
+                      >
+                        Confirm & Broadcast
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowAnchorConfirmDialog(true)}
+                    className="w-full py-3 rounded-full bg-[#0A0A0A] text-white text-xs font-bold min-h-[44px] hover:bg-[#262626] transition-transform active:scale-[0.98]"
+                  >
+                    Formally Confirm Incident as Anchor
+                  </button>
+                )}
+              </div>
+            )}
+
+          {/* Moderator Resolution Panel */}
           {(currentUser.role === 'MODERATOR' || currentUser.role === 'ADMIN') && incident.state !== 'RESOLVED' && (
-            <div className="p-3.5 rounded-lg border border-[#E7E5E4] bg-[#FAFAF9] space-y-2">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-[#171717]">
+            <div className="p-5 rounded-2xl border border-[#E7E5E4] bg-[#FAFAF9] space-y-3">
+              <div className="flex items-center gap-2 text-xs font-bold text-[#0A0A0A]">
                 <Lock className="w-3.5 h-3.5 text-[#737373]" />
-                <span>Moderator Incident Resolution</span>
+                <span>Moderator Resolution</span>
               </div>
 
               {showResolveDialog ? (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <input
                     type="text"
                     value={resolveReason}
                     onChange={(e) => setResolveReason(e.target.value)}
-                    placeholder="Reason for closing (e.g., Roadway cleared by recovery vehicle)..."
-                    className="w-full text-xs p-2 rounded border border-[#D6D3D1] bg-white"
+                    placeholder="Reason for closing (e.g. Roadway cleared by recovery team)..."
+                    className="w-full text-xs p-3 rounded-xl border border-[#D6D3D1] bg-white text-[#0A0A0A] focus:outline-none focus:border-[#0A0A0A]"
                   />
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => setShowResolveDialog(false)}
-                      className="text-xs px-3 py-1.5 text-[#737373]"
+                      className="text-xs px-4 py-2 text-[#737373] hover:text-[#0A0A0A] font-semibold"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleResolve}
-                      className="px-3 py-1.5 rounded bg-[#991B1B] text-[#FAFAF9] font-bold"
+                      className="px-6 py-2.5 rounded-full bg-[#991B1B] text-white text-xs font-bold hover:bg-[#7F1D1D]"
                     >
                       Mark as Resolved
                     </button>
@@ -385,13 +399,14 @@ export function IncidentDetailDrawer({
               ) : (
                 <button
                   onClick={() => setShowResolveDialog(true)}
-                  className="text-xs text-[#991B1B] hover:underline font-semibold"
+                  className="text-xs text-[#991B1B] hover:underline font-bold"
                 >
                   Mark incident as formally resolved
                 </button>
               )}
             </div>
           )}
+
         </div>
 
         {showBroadcastModal && (
