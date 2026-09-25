@@ -25,29 +25,17 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-[85dvh] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full mx-auto space-y-8">
-          
-          <div className="text-center space-y-3">
-            <Link href="/" className="inline-flex items-center gap-2.5 group">
-              <Image
-                src="/signal.png"
-                alt="SignalNG"
-                width={32}
-                height={32}
-                className="object-contain"
-              />
-              <span className="font-bold text-xl tracking-tight text-[#0A0A0A] group-hover:text-[#C7862B] transition-colors">
-                SignalNG
-              </span>
-            </Link>
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#0A0A0A]">
-              Create an account
-            </h1>
-            <p className="text-sm text-[#57534E] max-w-sm mx-auto">
-              Join your local transit corridor network and receive 5 km perimeter crisis triage alerts.
-            </p>
-          </div>
+    <div className="min-h-[75dvh] flex flex-col justify-center py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full mx-auto space-y-6">
+        
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#0A0A0A]">
+            Create an Account
+          </h1>
+          <p className="text-sm text-[#57534E] max-w-sm mx-auto">
+            Join your local transit corridor network and receive 5 km perimeter crisis alerts.
+          </p>
+        </div>
 
           {/* Double-Bezel Card Container */}
           <div className="p-2 rounded-[2.5rem] bg-black/5 border border-black/5 shadow-sm">

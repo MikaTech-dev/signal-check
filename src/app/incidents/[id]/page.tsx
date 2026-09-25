@@ -4,6 +4,7 @@ import React, { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signalStore } from '@/lib/store';
+import { incidentsApi } from '@/lib/api';
 import { Incident } from '@/types';
 import { IncidentDetailDrawer } from '@/components/incidents/IncidentDetailDrawer';
 import { ArrowLeft, Radio } from 'lucide-react';
@@ -19,9 +20,23 @@ export default function IncidentDetailPage({
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const found = signalStore.getIncidentById(resolvedParams.id);
-    if (found) setIncident(found);
-    setLoaded(true);
+    async function fetchIncident() {
+      try {
+        const res = await incidentsApi.getById(resolvedParams.id);
+        if (res.success && res.data) {
+          setIncident(res.data);
+          signalStore.updateIncident(res.data);
+          setLoaded(true);
+          return;
+        }
+      } catch {
+        // Fall back to local store
+      }
+      const found = signalStore.getIncidentById(resolvedParams.id);
+      if (found) setIncident(found);
+      setLoaded(true);
+    }
+    fetchIncident();
   }, [resolvedParams.id]);
 
   if (!loaded) {
@@ -62,7 +77,17 @@ export default function IncidentDetailPage({
       <IncidentDetailDrawer
         incident={incident}
         onClose={() => router.push('/nearby')}
-        onUpdate={() => {
+        onUpdate={async () => {
+          try {
+            const res = await incidentsApi.getById(resolvedParams.id);
+            if (res.success && res.data) {
+              setIncident(res.data);
+              signalStore.updateIncident(res.data);
+              return;
+            }
+          } catch {
+            // Fall back
+          }
           const updated = signalStore.getIncidentById(resolvedParams.id);
           if (updated) setIncident(updated);
         }}

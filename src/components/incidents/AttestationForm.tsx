@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { AttestationType, Incident } from '@/types';
 import { signalStore } from '@/lib/store';
 import { attestationsApi } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 import { Eye, ShieldAlert, MessageSquareQuote, Check, AlertCircle } from 'lucide-react';
 
 interface AttestationFormProps {
@@ -18,6 +20,7 @@ export function AttestationForm({
   onAttestationComplete,
   onCancel,
 }: AttestationFormProps) {
+  const { isAuthenticated } = useAuth();
   const [attestationType, setAttestationType] = useState<AttestationType>('FIRSTHAND_WITNESS');
   const [observation, setObservation] = useState('');
   const [observedAt, setObservedAt] = useState('Within last 10 minutes');
@@ -41,41 +44,73 @@ export function AttestationForm({
     setSubmitError('');
 
     try {
-      // 1. Try server API
-      try {
-        const apiRes = await attestationsApi.submitAttestation(incident.id, {
-          action: attestationType,
-          comment: observation.trim(),
-          locationLabel: locationObserved,
-        });
+      // 1. Try server API if authenticated
+      if (isAuthenticated) {
+        try {
+          const apiRes = await attestationsApi.submitAttestation(incident.id, {
+            action: attestationType,
+            comment: observation.trim(),
+            locationLabel: locationObserved,
+          });
 
-        if (apiRes.success && apiRes.data) {
-          setIsSubmitting(false);
-          const nextState = apiRes.data.transition?.nextState || apiRes.data.incident?.state || incident.state;
-          const stateChanged = nextState !== incident.state;
+          if (apiRes.success && apiRes.data) {
+            setIsSubmitting(false);
+            if (apiRes.data.attestation) {
+              signalStore.addAttestation(apiRes.data.attestation);
+            }
+            if (apiRes.data.incident) {
+              signalStore.updateIncident({ ...apiRes.data.incident, id: incident.id });
+            }
 
-          if (attestationType === 'ACTIVE_CONTRADICTION') {
-            toast.warning('Road reported clear', {
-              description: 'Your clearance report was recorded and visible to neighbors.',
-            });
-          } else if (attestationType === 'FIRSTHAND_WITNESS') {
-            toast.success('Eyewitness confirmation recorded', {
-              description: 'Thank you for helping keep your community informed.',
-            });
-          } else {
-            toast.info('Forwarded rumor noted', {
-              description: 'Tracked to measure rumor spread without inflating confirmed counts.',
-            });
+            const nextState = apiRes.data.transition?.nextState || apiRes.data.incident?.state || incident.state;
+            const stateChanged = nextState !== incident.state;
+
+            if (attestationType === 'ACTIVE_CONTRADICTION') {
+              toast.warning('Road reported clear', {
+                description: 'Your clearance report was recorded and is visible in the live stream.',
+              });
+            } else if (attestationType === 'FIRSTHAND_WITNESS') {
+              toast.success('Eyewitness confirmation recorded', {
+                description: 'Thank you for helping keep your community informed.',
+              });
+            } else {
+              toast.info('Forwarded rumor noted', {
+                description: 'Tracked to measure rumor spread without inflating confirmed counts.',
+              });
+            }
+
+            onAttestationComplete(stateChanged);
+            return;
           }
-
-          onAttestationComplete(stateChanged);
-          return;
+        } catch (err: unknown) {
+          const typedErr = err as { statusCode?: number; message?: string };
+          if (typedErr.statusCode === 409) {
+            setIsSubmitting(false);
+            setSubmitError('Cooldown active: You recently submitted an update for this incident.');
+            toast.error('Cooldown Active', {
+              description: 'You have recently submitted an update. Please wait a few minutes before posting another.',
+            });
+            return;
+          } else if (typedErr.statusCode === 401) {
+            setIsSubmitting(false);
+            setSubmitError('Sign in required to record verified community updates.');
+            toast.error('Sign In Required', {
+              description: 'Please sign in or register to submit verified eyewitness reports.',
+            });
+            return;
+          } else if (typedErr.statusCode === 422) {
+            setIsSubmitting(false);
+            setSubmitError(typedErr.message || 'Validation error. Please check your inputs.');
+            toast.error('Validation Error', {
+              description: typedErr.message || 'Please provide more details in your observation.',
+            });
+            return;
+          }
+          // Server or connection error: fall back to local store
         }
-      } catch {
-        // Fallback to local store
       }
 
-      // 2. Local fallback
+      // 2. Local store fallback
       const result = signalStore.submitAttestation({
         incidentId: incident.id,
         type: attestationType,
@@ -92,7 +127,7 @@ export function AttestationForm({
 
       if (attestationType === 'ACTIVE_CONTRADICTION') {
         toast.warning('Road reported clear', {
-          description: 'Your report was added alongside the active warning.',
+          description: 'Your report was added to the observation stream.',
         });
       } else if (attestationType === 'FIRSTHAND_WITNESS') {
         toast.success('Eyewitness confirmation recorded', {
@@ -114,6 +149,18 @@ export function AttestationForm({
 
   return (
     <form onSubmit={handleSubmit} className="bg-[#FAFAF9] border border-[#E7E5E4] rounded-2xl p-6 space-y-6">
+      {!isAuthenticated && (
+        <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
+          <AlertCircle className="w-4 h-4 text-[#C7862B] shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-semibold text-amber-950">Guest Mode Notice</p>
+            <p className="leading-relaxed">
+              You are currently browsing as a guest. <Link href="/login" className="underline font-bold text-amber-950 hover:text-black">Sign in or register</Link> to record verified eyewitness reports directly to the server.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div>
         <div className="flex items-center justify-between mb-1">
           <h4 className="text-base font-bold text-[#0A0A0A] tracking-tight">

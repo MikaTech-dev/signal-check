@@ -149,10 +149,10 @@ export function AppShell({ children }: AppShellProps) {
           icon: Clock,
         },
         {
-          label: 'Profile',
-          href: '/profile',
-          active: pathname === '/profile',
-          icon: User,
+          label: 'Guide',
+          href: '/help',
+          active: pathname === '/help',
+          icon: HelpCircle,
         },
       ]
     : [
@@ -169,7 +169,7 @@ export function AppShell({ children }: AppShellProps) {
           icon: PlusCircle,
         },
         {
-          label: 'How It Works',
+          label: 'Guide',
           href: '/help',
           active: pathname === '/help',
           icon: HelpCircle,
@@ -225,7 +225,7 @@ export function AppShell({ children }: AppShellProps) {
         {
           label: 'Sign In',
           href: '/login',
-          active: pathname === '/login',
+          active: pathname === '/login' || pathname === '/register',
           icon: User,
         },
       ];
@@ -239,15 +239,6 @@ export function AppShell({ children }: AppShellProps) {
     } else if (user.role === 'ADMIN') {
       roleExtraLinks.push({ label: 'Audit Logs', href: '/admin', icon: Layers });
     }
-  }
-
-  // Auth pages render without standard chrome
-  if (isAuthPage) {
-    return (
-      <div className="min-h-[100dvh] bg-[#FAFAF9] text-[#0A0A0A] font-sans antialiased flex flex-col selection:bg-[#C7862B]/20 selection:text-[#0A0A0A]">
-        {children}
-      </div>
-    );
   }
 
   return (
@@ -290,14 +281,6 @@ export function AppShell({ children }: AppShellProps) {
           </div>
 
           <div className="flex items-center gap-2.5">
-            <Link
-              href="/help"
-              title="Verification Help & Guide"
-              className="w-9 h-9 rounded-full border border-black/5 bg-white flex items-center justify-center text-[#737373] hover:text-[#0A0A0A] hover:border-[#0A0A0A] transition-colors"
-            >
-              <HelpCircle className="w-4 h-4" />
-            </Link>
-
             <button
               onClick={() => setShowNotifDrawer(!showNotifDrawer)}
               className="relative w-9 h-9 rounded-full border border-black/5 bg-white flex items-center justify-center text-[#737373] hover:text-[#0A0A0A] hover:border-[#0A0A0A] transition-colors"

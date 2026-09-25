@@ -483,6 +483,28 @@ class SignalStore {
     return [...this.attestations];
   }
 
+  public getAttestationsForIncident(incidentId: string): Attestation[] {
+    return this.attestations.filter((a) => a.incidentId === incidentId);
+  }
+
+  public addAttestation(newAtt: Attestation) {
+    const existingIdx = this.attestations.findIndex((a) => a.id === newAtt.id);
+    if (existingIdx >= 0) {
+      this.attestations[existingIdx] = newAtt;
+    } else {
+      this.attestations.unshift(newAtt);
+    }
+    this.notify();
+  }
+
+  public updateIncident(updated: Partial<Incident> & { id: string }) {
+    const idx = this.incidents.findIndex((i) => i.id === updated.id);
+    if (idx >= 0) {
+      this.incidents[idx] = { ...this.incidents[idx], ...updated };
+      this.notify();
+    }
+  }
+
   public getAuditLogs(): AuditLogEntry[] {
     return [...this.auditLogs];
   }
