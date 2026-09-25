@@ -11,14 +11,25 @@ import { RouteGuard } from '@/components/auth/RouteGuard';
 import { ShieldCheck, CheckCircle2, AlertTriangle, Check, ArrowRight } from 'lucide-react';
 
 export default function AnchorPage() {
+  return (
+    <RouteGuard mode="ROLE_PROTECTED" allowedRoles={['ANCHOR', 'COMMUNITY_ANCHOR', 'ADMIN']}>
+      <AnchorContent />
+    </RouteGuard>
+  );
+}
+
+function AnchorContent() {
   const { user } = useAuth();
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [anchorNotes, setAnchorNotes] = useState('');
-  const currentUser = user || signalStore.getCurrentUser();
+  const [isLoadingIncidents, setIsLoadingIncidents] = useState(true);
+
+  const currentUser = user;
 
   const loadData = () => {
     setIncidents(signalStore.getIncidents());
+    setIsLoadingIncidents(false);
   };
 
   useEffect(() => {
@@ -26,6 +37,8 @@ export default function AnchorPage() {
     const unsubscribe = signalStore.subscribe(() => loadData());
     return () => unsubscribe();
   }, []);
+
+  if (!currentUser) return null;
 
   const unconfirmedIncidents = incidents.filter(
     (i) => i.state === 'CORROBORATED' || i.state === 'CONFLICTING' || i.state === 'UNVERIFIED'
@@ -57,8 +70,7 @@ export default function AnchorPage() {
   };
 
   return (
-    <RouteGuard mode="ROLE_PROTECTED" allowedRoles={['ANCHOR', 'COMMUNITY_ANCHOR', 'ADMIN']}>
-      <div className="space-y-8 max-w-4xl mx-auto pb-16 text-[#0A0A0A]">
+    <div className="space-y-8 max-w-4xl mx-auto pb-16 text-[#0A0A0A]">
         {/* Header */}
         <div className="space-y-2 pt-4 pb-2 border-b border-[#E7E5E4]">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0A0A0A] text-white text-xs font-bold uppercase tracking-wider">
@@ -192,6 +204,5 @@ export default function AnchorPage() {
           </div>
         )}
       </div>
-    </RouteGuard>
   );
 }

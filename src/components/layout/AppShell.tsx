@@ -24,6 +24,7 @@ import {
 import { signalStore } from '@/lib/store';
 import { useAuth } from '@/context/AuthContext';
 import { UserRole } from '@/types';
+import { incidentsApi } from '@/lib/api';
 import { NotificationSheet } from '@/components/layout/NotificationSheet';
 
 interface AppShellProps {
@@ -33,45 +34,77 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isAuthenticated, logout } = useAuth();
-  const [currentUser, setCurrentUser] = useState(user || signalStore.getCurrentUser());
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
   const [notifications, setNotifications] = useState(signalStore.getNotifications());
-  const [showRoleSwitcher, setShowRoleSwitcher] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifDrawer, setShowNotifDrawer] = useState(false);
   const previousNotifsCountRef = useRef(notifications.length);
-  const roleSwitcherRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
-  const isLandingPage = pathname === '/';
   const isAuthPage = pathname === '/login' || pathname === '/register';
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        roleSwitcherRef.current &&
-        !roleSwitcherRef.current.contains(event.target as Node)
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
       ) {
-        setShowRoleSwitcher(false);
+        setShowUserMenu(false);
       }
     };
-    if (showRoleSwitcher) {
+    if (showUserMenu) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showRoleSwitcher]);
+  }, [showUserMenu]);
 
+  // Sync real-time notifications dynamically from backend API
   useEffect(() => {
-    if (user) {
-      setCurrentUser(user);
-    }
-  }, [user]);
+    const fetchLiveIncidents = async () => {
+      try {
+        const userCoords = signalStore.getUserCoordinates();
+        const res = await incidentsApi.getNearby(userCoords.latitude, userCoords.longitude, 10);
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          const normalized = res.data.map((item) => ({
+            ...item,
+            coordinates: item.coordinates || {
+              latitude: item.latitude || 0,
+              longitude: item.longitude || 0,
+            },
+            firstReportedAt: item.firstReportedAt || item.createdAt || new Date().toISOString(),
+            lastReaffirmedAt: item.lastReaffirmedAt || item.updatedAt || new Date().toISOString(),
+            expiresAt: item.expiresAt || new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+            reportCount: item.reportCount || 1,
+            firsthandCount: item.firsthandCount || 0,
+            contradictionCount: item.contradictionCount || 0,
+            hearsayCount: item.hearsayCount || 0,
+            supportingFacts: item.supportingFacts || (item.summary ? [item.summary] : []),
+            contradictingFacts: item.contradictingFacts || [],
+            missingDetails: item.missingDetails || [],
+            suggestedVerificationChecks: item.suggestedVerificationChecks || [],
+            synthesisSummary: item.synthesisSummary || item.summary || '',
+            convergenceStatus: item.convergenceStatus || 'STATIC',
+            triageStatus: item.triageStatus || 'ACTIVE_ALERT',
+          }));
+          signalStore.syncNotificationsFromIncidents(normalized, userCoords);
+        } else {
+          signalStore.syncNotificationsFromIncidents(signalStore.getIncidents(), userCoords);
+        }
+      } catch {
+        signalStore.syncNotificationsFromIncidents(signalStore.getIncidents());
+      }
+    };
+
+    fetchLiveIncidents();
+    const interval = setInterval(fetchLiveIncidents, 20000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = signalStore.subscribe(() => {
-      const updatedUser = user || signalStore.getCurrentUser();
       const updatedNotifs = signalStore.getNotifications();
-      setCurrentUser(updatedUser);
       setNotifications(updatedNotifs);
 
       // Trigger Sonner toast for newly received 5 km perimeter notifications
@@ -91,56 +124,125 @@ export function AppShell({ children }: AppShellProps) {
       previousNotifsCountRef.current = updatedNotifs.length;
     });
     return () => unsubscribe();
-  }, [router, user]);
+  }, [router]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const handleRoleChange = (role: UserRole) => {
-    signalStore.switchRole(role);
-    setShowRoleSwitcher(false);
-    toast.info(`Switched persona to ${role}`, {
-      description: `Viewing interface as ${signalStore.getCurrentUser().name}.`,
-    });
-  };
+  const desktopNavItems = isAuthenticated
+    ? [
+        {
+          label: 'Nearby Radar',
+          href: '/nearby',
+          active: pathname === '/nearby',
+          icon: Radio,
+        },
+        {
+          label: 'Log Report',
+          href: '/report',
+          active: pathname === '/report',
+          icon: PlusCircle,
+        },
+        {
+          label: 'My Activity',
+          href: '/activity',
+          active: pathname === '/activity',
+          icon: Clock,
+        },
+        {
+          label: 'Profile',
+          href: '/profile',
+          active: pathname === '/profile',
+          icon: User,
+        },
+      ]
+    : [
+        {
+          label: 'Nearby Radar',
+          href: '/nearby',
+          active: pathname === '/nearby',
+          icon: Radio,
+        },
+        {
+          label: 'Log Report',
+          href: '/report',
+          active: pathname === '/report',
+          icon: PlusCircle,
+        },
+        {
+          label: 'How It Works',
+          href: '/help',
+          active: pathname === '/help',
+          icon: HelpCircle,
+        },
+      ];
 
-  const navItems = [
-    {
-      label: 'Nearby Radar',
-      href: '/nearby',
-      active: pathname === '/nearby',
-      icon: Radio,
-    },
-    {
-      label: 'Log Report',
-      href: '/report',
-      active: pathname === '/report',
-      icon: PlusCircle,
-    },
-    {
-      label: 'My Activity',
-      href: '/activity',
-      active: pathname === '/activity',
-      icon: Clock,
-    },
-    {
-      label: 'Profile',
-      href: '/profile',
-      active: pathname === '/profile',
-      icon: User,
-    },
-  ];
+  const mobileNavItems = isAuthenticated
+    ? [
+        {
+          label: 'Nearby',
+          href: '/nearby',
+          active: pathname === '/nearby',
+          icon: Radio,
+        },
+        {
+          label: 'Report',
+          href: '/report',
+          active: pathname === '/report',
+          icon: PlusCircle,
+        },
+        {
+          label: 'Activity',
+          href: '/activity',
+          active: pathname === '/activity',
+          icon: Clock,
+        },
+        {
+          label: 'Profile',
+          href: '/profile',
+          active: pathname === '/profile',
+          icon: User,
+        },
+      ]
+    : [
+        {
+          label: 'Nearby',
+          href: '/nearby',
+          active: pathname === '/nearby',
+          icon: Radio,
+        },
+        {
+          label: 'Report',
+          href: '/report',
+          active: pathname === '/report',
+          icon: PlusCircle,
+        },
+        {
+          label: 'Guide',
+          href: '/help',
+          active: pathname === '/help',
+          icon: HelpCircle,
+        },
+        {
+          label: 'Sign In',
+          href: '/login',
+          active: pathname === '/login',
+          icon: User,
+        },
+      ];
 
   const roleExtraLinks = [];
-  if (currentUser.role === 'ANCHOR' || currentUser.role === 'COMMUNITY_ANCHOR') {
-    roleExtraLinks.push({ label: 'Anchor Board', href: '/anchor', icon: ShieldCheck });
-  } else if (currentUser.role === 'MODERATOR') {
-    roleExtraLinks.push({ label: 'Triage Queue', href: '/moderator', icon: SlidersHorizontal });
-  } else if (currentUser.role === 'ADMIN') {
-    roleExtraLinks.push({ label: 'Audit Logs', href: '/admin', icon: Layers });
+  if (isAuthenticated && user) {
+    if (user.role === 'ANCHOR' || user.role === 'COMMUNITY_ANCHOR') {
+      roleExtraLinks.push({ label: 'Anchor Board', href: '/anchor', icon: ShieldCheck });
+    } else if (user.role === 'MODERATOR') {
+      roleExtraLinks.push({ label: 'Triage Queue', href: '/moderator', icon: SlidersHorizontal });
+    } else if (user.role === 'ADMIN') {
+      roleExtraLinks.push({ label: 'Audit Logs', href: '/admin', icon: Layers });
+    }
   }
 
-  // If on landing page or auth pages, render specialized layouts
-  if (isLandingPage || isAuthPage) {
+  // Auth pages render without standard chrome
+  if (isAuthPage) {
     return (
       <div className="min-h-[100dvh] bg-[#FAFAF9] text-[#0A0A0A] font-sans antialiased flex flex-col selection:bg-[#C7862B]/20 selection:text-[#0A0A0A]">
         {children}
@@ -171,7 +273,7 @@ export function AppShell({ children }: AppShellProps) {
 
             {/* Desktop Navigation Links */}
             <nav className="hidden md:flex items-center gap-1 bg-black/5 p-1 rounded-full text-xs font-bold">
-              {navItems.map((item) => (
+              {desktopNavItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -209,75 +311,106 @@ export function AppShell({ children }: AppShellProps) {
               )}
             </button>
 
-            {isAuthenticated ? (
-              <div className="relative" ref={roleSwitcherRef}>
+            {isLoading ? (
+              <div className="w-20 h-9 bg-black/5 rounded-full animate-pulse" />
+            ) : isAuthenticated && user ? (
+              <div className="relative" ref={userMenuRef}>
                 <button
                   type="button"
-                  onClick={() => setShowRoleSwitcher(!showRoleSwitcher)}
+                  onClick={() => setShowUserMenu(!showUserMenu)}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold transition-all min-h-[36px] ${
-                    showRoleSwitcher
+                    showUserMenu
                       ? 'border-[#0A0A0A] bg-[#0A0A0A] text-white shadow-xs'
                       : 'border-black/10 bg-white text-[#0A0A0A] hover:border-[#0A0A0A]'
                   }`}
+                  aria-label="User Account Menu"
                 >
-                  <span className={`w-2 h-2 rounded-full ${showRoleSwitcher ? 'bg-white' : 'bg-[#C7862B]'}`} />
-                  <span className="capitalize">{currentUser.role.toLowerCase()}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 ${showRoleSwitcher ? 'text-white' : 'text-[#737373]'}`} />
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                    showUserMenu ? 'bg-white text-[#0A0A0A]' : 'bg-stone-100 text-[#0A0A0A]'
+                  }`}>
+                    {user.name.charAt(0).toUpperCase() || 'U'}
+                  </span>
+                  <span className="max-w-[110px] truncate">{user.name}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                    showUserMenu ? 'bg-white/20 text-white' : 'bg-stone-100 text-[#57534E]'
+                  }`}>
+                    {user.role.toLowerCase()}
+                  </span>
+                  <ChevronDown className={`w-3.5 h-3.5 ${showUserMenu ? 'text-white' : 'text-[#737373]'}`} />
                 </button>
 
-                {showRoleSwitcher && (
-                  <div className="absolute right-0 mt-2 w-60 bg-white border border-[#0A0A0A]/20 rounded-2xl shadow-[0_20px_48px_-8px_rgba(0,0,0,0.18)] p-2 z-50 text-xs animate-in fade-in slide-in-from-top-2 duration-150">
-                    <div className="px-3 py-2 text-[10px] font-bold text-[#737373] uppercase tracking-wider border-b border-[#F5F5F4] mb-1">
-                      Simulate Role Persona
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white border border-[#0A0A0A]/15 rounded-2xl shadow-[0_20px_48px_-8px_rgba(0,0,0,0.18)] p-2 z-50 text-xs animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="px-3 py-2.5 border-b border-[#F5F5F4] mb-1">
+                      <div className="font-bold text-[#0A0A0A] text-sm truncate">{user.name}</div>
+                      <div className="text-[11px] text-[#737373] truncate">{user.emailOrPhone}</div>
+                      <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#FAFAF9] border border-[#E7E5E4] text-[10px] font-bold text-[#0A0A0A]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#C7862B]" />
+                        <span>Role: {user.role}</span>
+                      </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRoleChange('RESIDENT')}
-                      className={`w-full text-left px-3 py-2 rounded-xl flex items-center justify-between transition-colors ${
-                        currentUser.role === 'RESIDENT' ? 'bg-[#0A0A0A] text-white font-bold' : 'hover:bg-[#FAFAF9] text-[#0A0A0A]'
-                      }`}
+
+                    <Link
+                      href="/profile"
+                      onClick={() => setShowUserMenu(false)}
+                      className="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2 hover:bg-[#FAFAF9] text-[#0A0A0A] font-medium transition-colors"
                     >
-                      <span>Resident (Amara)</span>
-                      {currentUser.role === 'RESIDENT' && <span className="text-[#C7862B] font-bold">&bull;</span>}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRoleChange('ANCHOR')}
-                      className={`w-full text-left px-3 py-2 rounded-xl flex items-center justify-between transition-colors ${
-                        currentUser.role === 'ANCHOR' || currentUser.role === 'COMMUNITY_ANCHOR' ? 'bg-[#0A0A0A] text-white font-bold' : 'hover:bg-[#FAFAF9] text-[#0A0A0A]'
-                      }`}
+                      <User className="w-4 h-4 text-[#737373]" />
+                      <span>Account Profile & Preferences</span>
+                    </Link>
+
+                    {user.role === 'ANCHOR' || user.role === 'COMMUNITY_ANCHOR' ? (
+                      <Link
+                        href="/anchor"
+                        onClick={() => setShowUserMenu(false)}
+                        className="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2 hover:bg-[#FAFAF9] text-[#0A0A0A] font-medium transition-colors"
+                      >
+                        <ShieldCheck className="w-4 h-4 text-[#C7862B]" />
+                        <span>Anchor Verification Board</span>
+                      </Link>
+                    ) : null}
+
+                    {user.role === 'MODERATOR' ? (
+                      <Link
+                        href="/moderator"
+                        onClick={() => setShowUserMenu(false)}
+                        className="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2 hover:bg-[#FAFAF9] text-[#0A0A0A] font-medium transition-colors"
+                      >
+                        <SlidersHorizontal className="w-4 h-4 text-[#C7862B]" />
+                        <span>Triage & Audit Queue</span>
+                      </Link>
+                    ) : null}
+
+                    {user.role === 'ADMIN' ? (
+                      <Link
+                        href="/admin"
+                        onClick={() => setShowUserMenu(false)}
+                        className="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2 hover:bg-[#FAFAF9] text-[#0A0A0A] font-medium transition-colors"
+                      >
+                        <Layers className="w-4 h-4 text-[#C7862B]" />
+                        <span>System Audit Logs</span>
+                      </Link>
+                    ) : null}
+
+                    <Link
+                      href="/help"
+                      onClick={() => setShowUserMenu(false)}
+                      className="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2 hover:bg-[#FAFAF9] text-[#0A0A0A] font-medium transition-colors"
                     >
-                      <span>Anchor (Musa)</span>
-                      {(currentUser.role === 'ANCHOR' || currentUser.role === 'COMMUNITY_ANCHOR') && <span className="text-[#C7862B] font-bold">&bull;</span>}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRoleChange('MODERATOR')}
-                      className={`w-full text-left px-3 py-2 rounded-xl flex items-center justify-between transition-colors ${
-                        currentUser.role === 'MODERATOR' ? 'bg-[#0A0A0A] text-white font-bold' : 'hover:bg-[#FAFAF9] text-[#0A0A0A]'
-                      }`}
-                    >
-                      <span>Moderator (Tari)</span>
-                      {currentUser.role === 'MODERATOR' && <span className="text-[#C7862B] font-bold">&bull;</span>}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRoleChange('ADMIN')}
-                      className={`w-full text-left px-3 py-2 rounded-xl flex items-center justify-between transition-colors ${
-                        currentUser.role === 'ADMIN' ? 'bg-[#0A0A0A] text-white font-bold' : 'hover:bg-[#FAFAF9] text-[#0A0A0A]'
-                      }`}
-                    >
-                      <span>Admin (Adaeze)</span>
-                      {currentUser.role === 'ADMIN' && <span className="text-[#C7862B] font-bold">&bull;</span>}
-                    </button>
+                      <HelpCircle className="w-4 h-4 text-[#737373]" />
+                      <span>How Verification Works</span>
+                    </Link>
 
                     <div className="pt-2 mt-1 border-t border-[#F5F5F4]">
                       <button
                         type="button"
-                        onClick={() => logout()}
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          logout();
+                        }}
                         className="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2 text-[#991B1B] hover:bg-rose-50 font-semibold transition-colors"
                       >
-                        <LogOut className="w-3.5 h-3.5" />
+                        <LogOut className="w-4 h-4" />
                         <span>Sign Out</span>
                       </button>
                     </div>
@@ -285,15 +418,20 @@ export function AppShell({ children }: AppShellProps) {
                 )}
               </div>
             ) : (
-              <Link
-                href="/login"
-                className="group flex items-center gap-2 rounded-full bg-[#0A0A0A] pl-4 pr-1.5 py-1.5 text-white hover:bg-[#262626] transition-all active:scale-[0.98]"
-              >
-                <span className="text-xs font-bold">Sign In</span>
-                <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center transition-transform group-hover:translate-x-0.5">
-                  <ArrowRight className="w-3 h-3" />
-                </div>
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/login"
+                  className="px-3.5 py-1.5 rounded-full border border-[#D6D3D1] text-xs font-bold text-[#0A0A0A] hover:border-[#0A0A0A] transition-colors min-h-[36px] flex items-center justify-center"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-3.5 py-1.5 rounded-full bg-[#0A0A0A] text-xs font-bold text-white hover:bg-[#262626] transition-colors min-h-[36px] flex items-center justify-center hidden sm:flex"
+                >
+                  Register
+                </Link>
+              </div>
             )}
           </div>
         </header>
@@ -301,7 +439,7 @@ export function AppShell({ children }: AppShellProps) {
         {roleExtraLinks.length > 0 && (
           <div className="max-w-5xl mx-auto mt-2 px-6 flex items-center gap-2 pointer-events-auto">
             <span className="text-[11px] font-bold text-[#737373] uppercase tracking-wider">
-              {currentUser.role}:
+              {user?.role}:
             </span>
             {roleExtraLinks.map((link) => (
               <Link
@@ -337,7 +475,7 @@ export function AppShell({ children }: AppShellProps) {
       {/* Mobile Bottom Navigation Pill Bar */}
       <nav className="fixed bottom-4 left-4 right-4 z-40 sm:hidden pointer-events-none">
         <div className="max-w-md mx-auto bg-[#FAFAF9]/90 backdrop-blur-xl border border-black/10 rounded-full p-1.5 shadow-[0_12px_32px_-4px_rgba(0,0,0,0.12)] grid grid-cols-4 gap-1 pointer-events-auto">
-          {navItems.map((item) => {
+          {mobileNavItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link
@@ -351,7 +489,7 @@ export function AppShell({ children }: AppShellProps) {
               >
                 <Icon className={`w-4 h-4 ${item.active ? 'text-[#C7862B]' : 'text-[#737373]'}`} />
                 <span className="text-[10px] mt-0.5 tracking-tight font-semibold">
-                  {item.label.split(' ')[0]}
+                  {item.label}
                 </span>
               </Link>
             );

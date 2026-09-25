@@ -10,6 +10,7 @@ import { SlidersHorizontal, ShieldAlert, CheckCircle2, Ban, Check } from 'lucide
 
 export default function ModeratorPage() {
   const [reports, setReports] = useState<IncidentReport[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const loadData = async () => {
     try {
@@ -20,6 +21,8 @@ export default function ModeratorPage() {
       }
     } catch {
       // Local fallback
+    } finally {
+      setIsLoading(false);
     }
     setReports(signalStore.getReports());
   };
@@ -80,7 +83,17 @@ export default function ModeratorPage() {
             </h2>
           </div>
 
-          {quarantinedReports.length === 0 ? (
+          {isLoading ? (
+            <div className="space-y-4 animate-pulse">
+              {[1, 2].map((i) => (
+                <div key={i} className="p-8 bg-white border border-[#E7E5E4] rounded-[2rem] space-y-3">
+                  <div className="h-5 bg-black/5 rounded w-1/4" />
+                  <div className="h-16 bg-black/5 rounded-2xl" />
+                  <div className="h-4 bg-black/5 rounded w-1/3" />
+                </div>
+              ))}
+            </div>
+          ) : quarantinedReports.length === 0 ? (
             <div className="p-8 text-center bg-white border border-[#E7E5E4] rounded-2xl text-sm text-[#737373]">
               No viral chains currently quarantined in your queue.
             </div>

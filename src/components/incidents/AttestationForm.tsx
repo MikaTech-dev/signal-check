@@ -32,8 +32,8 @@ export function AttestationForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!observation.trim()) {
-      setSubmitError('Please provide your observational statement.');
-      toast.error('Observational statement is required.');
+      setSubmitError('Please describe what you observed.');
+      toast.error('Observation details are required.');
       return;
     }
 
@@ -55,16 +55,16 @@ export function AttestationForm({
           const stateChanged = nextState !== incident.state;
 
           if (attestationType === 'ACTIVE_CONTRADICTION') {
-            toast.warning('Contradiction attestation recorded', {
-              description: `Incident state updated to ${nextState}.`,
+            toast.warning('Road reported clear', {
+              description: 'Your clearance report was recorded and visible to neighbors.',
             });
           } else if (attestationType === 'FIRSTHAND_WITNESS') {
-            toast.success('Firsthand witness statement recorded', {
-              description: `Current state: ${nextState}.`,
+            toast.success('Eyewitness confirmation recorded', {
+              description: 'Thank you for helping keep your community informed.',
             });
           } else {
-            toast.info('Hearsay telemetry logged', {
-              description: 'Tracks rumor volume without inflating corroboration count.',
+            toast.info('Forwarded rumor noted', {
+              description: 'Tracked to measure rumor spread without inflating confirmed counts.',
             });
           }
 
@@ -91,24 +91,24 @@ export function AttestationForm({
       setIsSubmitting(false);
 
       if (attestationType === 'ACTIVE_CONTRADICTION') {
-        toast.warning('Contradiction attestation recorded', {
-          description: `Incident state recalculated to ${result.updatedIncident.state}.`,
+        toast.warning('Road reported clear', {
+          description: 'Your report was added alongside the active warning.',
         });
       } else if (attestationType === 'FIRSTHAND_WITNESS') {
-        toast.success('Firsthand witness statement recorded', {
-          description: `Current state: ${result.updatedIncident.state}.`,
+        toast.success('Eyewitness confirmation recorded', {
+          description: 'Thank you for helping keep your community informed.',
         });
       } else {
-        toast.info('Hearsay telemetry logged', {
-          description: 'Tracks rumor volume without inflating corroboration count.',
+        toast.info('Forwarded rumor noted', {
+          description: 'Tracked to measure rumor spread without inflating confirmed counts.',
         });
       }
 
       onAttestationComplete(result.stateChanged);
     } catch {
       setIsSubmitting(false);
-      setSubmitError('Failed to record attestation. Please try again.');
-      toast.error('Failed to submit attestation.');
+      setSubmitError('Failed to record update. Please try again.');
+      toast.error('Failed to submit update.');
     }
   };
 
@@ -117,12 +117,12 @@ export function AttestationForm({
       <div>
         <div className="flex items-center justify-between mb-1">
           <h4 className="text-base font-bold text-[#0A0A0A] tracking-tight">
-            Log Structured Attestation
+            Confirm or Update This Incident
           </h4>
-          <span className="text-xs font-semibold text-[#737373]">No upvotes: Evidentiary only</span>
+          <span className="text-xs font-semibold text-[#737373]">Ground Check</span>
         </div>
         <p className="text-xs text-[#57534E]">
-          Select the option that strictly matches your evidentiary basis.
+          Select the option that matches what you directly know.
         </p>
       </div>
 
@@ -138,10 +138,10 @@ export function AttestationForm({
         >
           <div className="flex items-center gap-2 font-bold text-xs mb-1.5">
             <Eye className="w-4 h-4" />
-            <span>Firsthand</span>
+            <span>I See This Now</span>
           </div>
           <p className={`text-xs leading-relaxed ${attestationType === 'FIRSTHAND_WITNESS' ? 'text-gray-300' : 'text-[#737373]'}`}>
-            I am at the location observing this directly.
+            I am physically here right now observing this directly.
           </p>
         </button>
 
@@ -156,10 +156,10 @@ export function AttestationForm({
         >
           <div className="flex items-center gap-2 font-bold text-xs mb-1.5">
             <ShieldAlert className="w-4 h-4" />
-            <span>Contradiction</span>
+            <span>Road is Clear</span>
           </div>
           <p className={`text-xs leading-relaxed ${attestationType === 'ACTIVE_CONTRADICTION' ? 'text-rose-200' : 'text-[#737373]'}`}>
-            I passed this spot recently; conditions are normal.
+            I passed this spot recently and conditions are normal.
           </p>
         </button>
 
@@ -174,10 +174,10 @@ export function AttestationForm({
         >
           <div className="flex items-center gap-2 font-bold text-xs mb-1.5">
             <MessageSquareQuote className="w-4 h-4" />
-            <span>Hearsay</span>
+            <span>Heard from Others</span>
           </div>
           <p className={`text-xs leading-relaxed ${attestationType === 'HEARSAY_TRACKING' ? 'text-gray-300' : 'text-[#737373]'}`}>
-            Received via third-party forward or verbal rumor.
+            Received via a group chat forward or neighborhood rumor.
           </p>
         </button>
       </div>
@@ -185,10 +185,10 @@ export function AttestationForm({
       <div className="space-y-2">
         <label className="block text-xs font-bold uppercase tracking-wider text-[#737373]">
           {attestationType === 'FIRSTHAND_WITNESS'
-            ? 'What did you personally observe on scene?'
+            ? 'What did you observe on scene?'
             : attestationType === 'ACTIVE_CONTRADICTION'
-            ? 'What directly contradicts the reported claim?'
-            : 'What was stated in the third-party report?'}
+            ? 'What did you observe showing conditions are normal?'
+            : 'What did the forward or message state?'}
         </label>
         <textarea
           rows={3}
@@ -239,20 +239,20 @@ export function AttestationForm({
         <div className="space-y-3">
           <div className="space-y-2">
             <label className="block text-xs font-bold uppercase tracking-wider text-[#737373]">
-              Source description (WhatsApp group, neighbour, verbal rumor):
+              Source description (WhatsApp group, neighbour, verbal message):
             </label>
             <input
               type="text"
               value={hearsaySource}
               onChange={(e) => setHearsaySource(e.target.value)}
-              placeholder="e.g., WhatsApp church group forward"
+              placeholder="e.g., WhatsApp community group forward"
               className="w-full text-sm p-3.5 rounded-xl border border-[#E7E5E4] bg-white text-[#0A0A0A] focus:outline-none focus:border-[#0A0A0A]"
             />
           </div>
           <div className="p-3 rounded-xl bg-white border border-[#E7E5E4] text-xs text-[#57534E] flex items-start gap-2">
             <AlertCircle className="w-4 h-4 text-[#737373] shrink-0 mt-0.5" />
             <span>
-              Hearsay submissions track rumor volume without inflating firsthand corroboration count.
+              Forwarded messages help track rumor volume without being counted as confirmed eyewitness reports.
             </span>
           </div>
         </div>
@@ -276,7 +276,7 @@ export function AttestationForm({
           className="px-6 py-3 rounded-full bg-[#0A0A0A] text-white text-xs font-bold hover:bg-[#262626] active:scale-[0.98] transition-transform min-h-[44px] flex items-center gap-2"
         >
           <Check className="w-4 h-4 text-[#C7862B]" />
-          <span>{isSubmitting ? 'Recording...' : 'Submit Attestation'}</span>
+          <span>{isSubmitting ? 'Recording...' : 'Submit Ground Update'}</span>
         </button>
       </div>
     </form>

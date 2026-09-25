@@ -45,7 +45,7 @@ export function IncidentDetailDrawer({
   const [showResolveDialog, setShowResolveDialog] = useState(false);
   const [resolveReason, setResolveReason] = useState('');
 
-  const currentUser = user || signalStore.getCurrentUser();
+  const currentUser = user;
   const userCoords = signalStore.getUserCoordinates();
   const incCoords = incident.coordinates || {
     latitude: incident.latitude || 0,
@@ -303,7 +303,7 @@ export function IncidentDetailDrawer({
                 className="group flex-1 min-h-[48px] px-6 py-3 rounded-full bg-[#0A0A0A] text-white text-xs font-bold hover:bg-[#262626] active:scale-[0.98] transition-transform flex items-center justify-center gap-2.5 shadow-sm"
               >
                 <Plus className="w-4 h-4 text-[#C7862B]" />
-                <span>Add Attestation</span>
+                <span>Confirm or Dispute</span>
               </button>
 
               <button
@@ -317,7 +317,8 @@ export function IncidentDetailDrawer({
           )}
 
           {/* Anchor Confirmation Panel */}
-          {(currentUser.role === 'ANCHOR' || currentUser.role === 'COMMUNITY_ANCHOR' || currentUser.role === 'ADMIN') &&
+          {currentUser &&
+            (currentUser.role === 'ANCHOR' || currentUser.role === 'COMMUNITY_ANCHOR' || currentUser.role === 'ADMIN') &&
             incident.state !== 'CONFIRMED' &&
             incident.state !== 'RESOLVED' && (
               <div className="p-5 rounded-2xl border border-[#0A0A0A] bg-amber-50/40 space-y-3">
@@ -365,12 +366,14 @@ export function IncidentDetailDrawer({
             )}
 
           {/* Moderator Resolution Panel */}
-          {(currentUser.role === 'MODERATOR' || currentUser.role === 'ADMIN') && incident.state !== 'RESOLVED' && (
-            <div className="p-5 rounded-2xl border border-[#E7E5E4] bg-[#FAFAF9] space-y-3">
-              <div className="flex items-center gap-2 text-xs font-bold text-[#0A0A0A]">
-                <Lock className="w-3.5 h-3.5 text-[#737373]" />
-                <span>Moderator Resolution</span>
-              </div>
+          {currentUser &&
+            (currentUser.role === 'MODERATOR' || currentUser.role === 'ADMIN') &&
+            incident.state !== 'RESOLVED' && (
+              <div className="p-5 rounded-2xl border border-[#E7E5E4] bg-[#FAFAF9] space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#0A0A0A]">
+                  <Lock className="w-3.5 h-3.5 text-[#737373]" />
+                  <span>Moderator Resolution</span>
+                </div>
 
               {showResolveDialog ? (
                 <div className="space-y-3">

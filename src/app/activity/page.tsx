@@ -18,25 +18,42 @@ import {
 } from 'lucide-react';
 
 export default function ActivityPage() {
+  return (
+    <RouteGuard mode="AUTHENTICATED">
+      <ActivityContent />
+    </RouteGuard>
+  );
+}
+
+function ActivityContent() {
   const { user } = useAuth();
   const [reports, setReports] = useState<IncidentReport[]>([]);
   const [attestations, setAttestations] = useState<Attestation[]>([]);
   const [activeTab, setActiveTab] = useState<'REPORTS' | 'ATTESTATIONS'>('REPORTS');
+  const [isLoadingActivity, setIsLoadingActivity] = useState(true);
 
-  const currentUser = user || signalStore.getCurrentUser();
+  const currentUser = user;
 
   const loadData = () => {
+    if (!currentUser) return;
     const allReports = signalStore.getReports().filter((r) => r.userId === currentUser.id);
     const allAttestations = signalStore.getAttestations().filter((a) => a.userId === currentUser.id);
     setReports(allReports);
     setAttestations(allAttestations);
+    setIsLoadingActivity(false);
   };
 
   useEffect(() => {
-    loadData();
-    const unsubscribe = signalStore.subscribe(() => loadData());
+    if (currentUser) {
+      loadData();
+    }
+    const unsubscribe = signalStore.subscribe(() => {
+      if (currentUser) loadData();
+    });
     return () => unsubscribe();
   }, [currentUser]);
+
+  if (!currentUser) return null;
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto pb-16 text-[#0A0A0A]">
@@ -45,13 +62,13 @@ export default function ActivityPage() {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0A0A0A] text-white text-xs font-bold uppercase tracking-wider">
               <Clock className="w-3.5 h-3.5 text-[#C7862B]" />
-              <span>Personal Evidence Log</span>
+              <span>Activity History</span>
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#0A0A0A]">
               My Activity
             </h1>
             <p className="text-sm text-[#57534E]">
-              Logged submissions and firsthand attestations as <span className="font-bold text-[#0A0A0A]">{currentUser.name}</span>.
+              Your submitted reports and eyewitness updates as <span className="font-bold text-[#0A0A0A]">{currentUser.name}</span>.
             </p>
           </div>
 
@@ -87,7 +104,7 @@ export default function ActivityPage() {
                 : 'bg-white border border-[#D6D3D1] text-[#737373] hover:text-[#0A0A0A] hover:border-[#0A0A0A]'
             }`}
           >
-            Attestations ({attestations.length})
+            Eyewitness Updates ({attestations.length})
           </button>
         </div>
 
@@ -148,16 +165,16 @@ export default function ActivityPage() {
           </div>
         )}
 
-        {/* Attestations Feed */}
+        {/* Eyewitness Updates Feed */}
         {activeTab === 'ATTESTATIONS' && (
           <div className="space-y-4">
             {attestations.length === 0 ? (
               <div className="p-2 rounded-[2.5rem] bg-black/5 border border-black/5">
                 <div className="bg-white rounded-[calc(2.5rem-0.5rem)] p-12 text-center space-y-4">
                   <Eye className="w-10 h-10 text-[#A8A29E] mx-auto" />
-                  <h3 className="text-xl font-bold text-[#0A0A0A]">No structured attestations</h3>
+                  <h3 className="text-xl font-bold text-[#0A0A0A]">No eyewitness updates yet</h3>
                   <p className="text-sm text-[#737373] max-w-sm mx-auto">
-                    You have not added firsthand sightings or contradictions to active incidents yet.
+                    You have not confirmed or reported clear conditions on any active incidents yet.
                   </p>
                   <Link
                     href="/nearby"

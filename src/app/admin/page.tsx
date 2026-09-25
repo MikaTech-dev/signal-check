@@ -9,6 +9,7 @@ import { Layers, Shield, Clock, ArrowRight } from 'lucide-react';
 
 export default function AdminPage() {
   const [logs, setLogs] = useState<AuditLogEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -20,6 +21,8 @@ export default function AdminPage() {
         }
       } catch {
         // Local fallback
+      } finally {
+        setIsLoading(false);
       }
       setLogs(signalStore.getAuditLogs());
     };
@@ -61,7 +64,17 @@ export default function AdminPage() {
             </div>
 
             <div className="divide-y divide-[#F5F5F4] text-xs">
-              {logs.length === 0 ? (
+              {isLoading ? (
+                <div className="p-6 space-y-4 animate-pulse">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="space-y-2 py-3">
+                      <div className="h-4 bg-black/5 rounded w-1/3" />
+                      <div className="h-3 bg-black/5 rounded w-3/4" />
+                      <div className="h-3 bg-black/5 rounded w-1/4" />
+                    </div>
+                  ))}
+                </div>
+              ) : logs.length === 0 ? (
                 <div className="p-12 text-center text-[#737373]">No audit logs recorded yet.</div>
               ) : (
                 logs.map((entry) => (

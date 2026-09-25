@@ -17,7 +17,7 @@ import {
   INITIAL_REPORTS,
   MOCK_USERS,
 } from './mockData';
-import { isWithinClusterRadius } from './haversine';
+import { isWithinClusterRadius, calculateHaversineDistance } from './haversine';
 import { evaluateIncidentState } from './stateMachine';
 import { heuristicTriageAudit } from './deepseek';
 
@@ -28,13 +28,14 @@ export const DEFAULT_USER_COORDINATES: Coordinates = {
 };
 
 class SignalStore {
-  private currentUser: UserAccount = MOCK_USERS[0]; // Amara (Resident)
+  private currentUser: UserAccount | null = null;
   private userCoordinates: Coordinates = { ...DEFAULT_USER_COORDINATES };
   private incidents: Incident[] = [...INITIAL_INCIDENTS];
   private reports: IncidentReport[] = [...INITIAL_REPORTS];
   private attestations: Attestation[] = [...INITIAL_ATTESTATIONS];
   private notifications: NotificationItem[] = [...INITIAL_NOTIFICATIONS];
   private auditLogs: AuditLogEntry[] = [...INITIAL_AUDIT_LOGS];
+  private readNotificationIds: Set<string> = new Set();
   private listeners: Set<() => void> = new Set();
 
   constructor() {
@@ -46,12 +47,17 @@ class SignalStore {
   private saveToLocalStorage() {
     if (typeof window === 'undefined') return;
     try {
-      localStorage.setItem('signalng_current_user', JSON.stringify(this.currentUser));
+      if (this.currentUser) {
+        localStorage.setItem('signalng_current_user', JSON.stringify(this.currentUser));
+      } else {
+        localStorage.removeItem('signalng_current_user');
+      }
       localStorage.setItem('signalng_incidents', JSON.stringify(this.incidents));
       localStorage.setItem('signalng_reports', JSON.stringify(this.reports));
       localStorage.setItem('signalng_attestations', JSON.stringify(this.attestations));
       localStorage.setItem('signalng_notifications', JSON.stringify(this.notifications));
       localStorage.setItem('signalng_audit_logs', JSON.stringify(this.auditLogs));
+      localStorage.setItem('signalng_read_notifs', JSON.stringify(Array.from(this.readNotificationIds)));
     } catch {
       // Storage quota or SSR fallback
     }
@@ -66,13 +72,19 @@ class SignalStore {
       const savedAttestations = localStorage.getItem('signalng_attestations');
       const savedNotifs = localStorage.getItem('signalng_notifications');
       const savedLogs = localStorage.getItem('signalng_audit_logs');
+      const savedRead = localStorage.getItem('signalng_read_notifs');
 
-      if (savedUser) this.currentUser = JSON.parse(savedUser);
+      if (savedUser) {
+        this.currentUser = JSON.parse(savedUser);
+      } else {
+        this.currentUser = null;
+      }
       if (savedIncidents) this.incidents = JSON.parse(savedIncidents);
       if (savedReports) this.reports = JSON.parse(savedReports);
       if (savedAttestations) this.attestations = JSON.parse(savedAttestations);
       if (savedNotifs) this.notifications = JSON.parse(savedNotifs);
       if (savedLogs) this.auditLogs = JSON.parse(savedLogs);
+      if (savedRead) this.readNotificationIds = new Set(JSON.parse(savedRead));
     } catch {
       // Reset to initial mock data on error
     }
@@ -91,23 +103,12 @@ class SignalStore {
   }
 
   // --- User & Role Management ---
-  public getCurrentUser(): UserAccount {
+  public getCurrentUser(): UserAccount | null {
     return this.currentUser;
   }
 
-  public switchRole(role: UserRole) {
-    const foundUser = MOCK_USERS.find((u) => u.role === role) || {
-      id: `user-${role.toLowerCase()}`,
-      name: `User (${role})`,
-      emailOrPhone: `user@signalng-${role.toLowerCase()}.ng`,
-      role,
-      status: 'ACTIVE',
-      lastLoginAt: 'Just now',
-      locationPermission: true,
-      notificationsEnabled: true,
-      notificationRadiusKm: 5.0,
-    };
-    this.currentUser = foundUser;
+  public setCurrentUser(user: UserAccount | null) {
+    this.currentUser = user ? { ...user } : null;
     this.notify();
   }
 
@@ -150,8 +151,8 @@ class SignalStore {
     const newReport: IncidentReport = {
       ...reportInput,
       id: reportId,
-      userId: this.currentUser.id,
-      reporterLabel: this.currentUser.name,
+      userId: this.currentUser?.id || 'anon',
+      reporterLabel: this.currentUser?.name || 'Anonymous Resident',
       submittedAt: new Date().toISOString(),
       moderationStatus: reportInput.triageAudit.quarantined ? 'QUARANTINED' : 'PENDING',
     };
@@ -240,8 +241,8 @@ class SignalStore {
     const newAttestation: Attestation = {
       ...attestationInput,
       id: attId,
-      userId: this.currentUser.id,
-      userRole: this.currentUser.role,
+      userId: this.currentUser?.id || 'anon',
+      userRole: this.currentUser?.role || 'RESIDENT',
       submittedAt: new Date().toISOString(),
     };
 
@@ -293,9 +294,12 @@ class SignalStore {
     const incident = this.incidents.find((i) => i.id === incidentId);
     if (!incident) throw new Error('Incident not found');
 
+    const anchorName = this.currentUser?.name || 'Community Anchor';
+    const anchorTitle = this.currentUser?.assignedCorridor || 'Stationary Corridor Anchor';
+
     incident.confirmedByAnchor = {
-      anchorName: this.currentUser.name,
-      anchorTitle: this.currentUser.assignedCorridor || 'Stationary Corridor Anchor',
+      anchorName,
+      anchorTitle,
       confirmedAt: new Date().toISOString(),
       notes,
     };
@@ -306,7 +310,7 @@ class SignalStore {
     this.triggerNotification(
       incident.id,
       'VERIFIED BY COMMUNITY ANCHOR',
-      `Formally verified by ${this.currentUser.name}. ${notes}`,
+      `Formally verified by ${anchorName}. ${notes}`,
       'CONFIRMED',
       incident.locationLabel
     );
@@ -314,7 +318,7 @@ class SignalStore {
     this.logAudit(
       'FORMAL_ANCHOR_CONFIRMATION',
       incident.id,
-      `Formally confirmed incident by anchor ${this.currentUser.name}. Notes: ${notes}`
+      `Formally confirmed incident by anchor ${anchorName}. Notes: ${notes}`
     );
 
     this.notify();
@@ -325,9 +329,12 @@ class SignalStore {
     const incident = this.incidents.find((i) => i.id === incidentId);
     if (!incident) throw new Error('Incident not found');
 
+    const resolverName = this.currentUser?.name || 'Authorized Staff';
+    const resolverRole = this.currentUser?.role || 'MODERATOR';
+
     incident.resolvedBy = {
-      name: this.currentUser.name,
-      role: this.currentUser.role,
+      name: resolverName,
+      role: resolverRole,
       resolvedAt: new Date().toISOString(),
       reason,
     };
@@ -337,7 +344,7 @@ class SignalStore {
     this.logAudit(
       'RESOLVE_INCIDENT',
       incident.id,
-      `Resolved incident by ${this.currentUser.name} (${this.currentUser.role}). Reason: ${reason}`
+      `Resolved incident by ${resolverName} (${resolverRole}). Reason: ${reason}`
     );
 
     this.notify();
@@ -386,6 +393,55 @@ class SignalStore {
       read: false,
     };
     this.notifications.unshift(notif);
+    this.notify();
+  }
+
+  public syncNotificationsFromIncidents(incidents: Incident[], userCoords?: Coordinates) {
+    const coords = userCoords || this.userCoordinates;
+    const generatedNotifs: NotificationItem[] = [];
+
+    incidents.forEach((inc) => {
+      if (inc.state === 'RESOLVED') return;
+      const incCoords = inc.coordinates || { latitude: inc.latitude || 0, longitude: inc.longitude || 0 };
+      const dist = calculateHaversineDistance(coords, incCoords);
+      const isWithinRadius = dist <= 5.0 || (typeof inc.distanceKm === 'number' && inc.distanceKm <= 5.0);
+
+      if (isWithinRadius) {
+        const notifId = `notif-${inc.id}`;
+        let title = 'COMMUNITY REPORT';
+        if (inc.state === 'CONFIRMED') {
+          title = 'VERIFIED BY COMMUNITY ANCHOR';
+        } else if (inc.state === 'CONFLICTING') {
+          title = 'CONFLICTING REPORTS';
+        } else if (inc.state === 'CORROBORATED') {
+          title = 'COMMUNITY REPORT (CONFIRMED BY 2+)';
+        }
+
+        const effectiveDist = typeof inc.distanceKm === 'number' ? inc.distanceKm : dist;
+        const distanceText = effectiveDist < 1 ? 'Under 1 km away' : `${effectiveDist.toFixed(1)} km away`;
+        const summaryText =
+          inc.summary ||
+          inc.synthesisSummary ||
+          `${inc.incidentType.replace(/_/g, ' ')} active near ${inc.locationLabel}. Direct eyewitness observations requested.`;
+
+        generatedNotifs.push({
+          id: notifId,
+          incidentId: inc.id,
+          title,
+          message: summaryText,
+          incidentState: inc.state,
+          locationLabel: inc.locationLabel,
+          distanceBand: distanceText,
+          createdAt: inc.firstReportedAt || inc.createdAt || new Date().toISOString(),
+          read: this.readNotificationIds.has(notifId),
+        });
+      }
+    });
+
+    if (generatedNotifs.length > 0) {
+      this.notifications = generatedNotifs;
+      this.notify();
+    }
   }
 
   public getNotifications(): NotificationItem[] {
@@ -393,11 +449,30 @@ class SignalStore {
   }
 
   public markNotificationAsRead(id: string) {
+    this.readNotificationIds.add(id);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('signalng_read_notifs', JSON.stringify(Array.from(this.readNotificationIds)));
+      } catch {}
+    }
     const notif = this.notifications.find((n) => n.id === id);
     if (notif) {
       notif.read = true;
       this.notify();
     }
+  }
+
+  public markAllNotificationsAsRead() {
+    this.notifications.forEach((n) => {
+      n.read = true;
+      this.readNotificationIds.add(n.id);
+    });
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('signalng_read_notifs', JSON.stringify(Array.from(this.readNotificationIds)));
+      } catch {}
+    }
+    this.notify();
   }
 
   public getReports(): IncidentReport[] {
@@ -416,8 +491,8 @@ class SignalStore {
     const entry: AuditLogEntry = {
       id: `log-${Date.now()}`,
       timestamp: new Date().toISOString(),
-      actorName: this.currentUser.name,
-      actorRole: this.currentUser.role,
+      actorName: this.currentUser?.name || 'System / Anonymous',
+      actorRole: this.currentUser?.role || 'RESIDENT',
       action,
       targetId,
       details,
@@ -426,7 +501,7 @@ class SignalStore {
   }
 
   public resetToDefaultSeed() {
-    this.currentUser = MOCK_USERS[0];
+    this.currentUser = null;
     this.incidents = [...INITIAL_INCIDENTS];
     this.reports = [...INITIAL_REPORTS];
     this.attestations = [...INITIAL_ATTESTATIONS];

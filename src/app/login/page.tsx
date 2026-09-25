@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -67,7 +68,18 @@ const DEMO_ACCOUNTS = [
 ];
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[85dvh] flex items-center justify-center text-sm text-[#737373]">Loading...</div>}>
+      <LoginFormContent />
+    </Suspense>
+  );
+}
+
+function LoginFormContent() {
   const { login, isLoading } = useAuth();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect') || undefined;
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showDemoDropdown, setShowDemoDropdown] = useState(false);
@@ -95,7 +107,7 @@ export default function LoginPage() {
     e.preventDefault();
     if (!email) return;
     try {
-      await login({ email, password });
+      await login({ email, password }, redirectUrl);
     } catch {
       // Toast handled by AuthContext
     }

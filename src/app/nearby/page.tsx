@@ -38,6 +38,7 @@ function NearbyIncidentsContent() {
   const [filterState, setFilterState] = useState<string>('ALL');
   const [filterType, setFilterType] = useState<string>('ALL');
   const [maxDistanceKm, setMaxDistanceKm] = useState<number>(5.0);
+  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
@@ -86,6 +87,8 @@ function NearbyIncidentsContent() {
       }
     } catch {
       // Fall back to local store
+    } finally {
+      setIsLoading(false);
     }
 
     const list = signalStore.getIncidents();
@@ -104,10 +107,10 @@ function NearbyIncidentsContent() {
     return () => unsubscribe();
   }, [deepLinkedIncidentId]);
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setIsRefreshing(true);
-    loadData();
-    setTimeout(() => setIsRefreshing(false), 400);
+    await loadData();
+    setIsRefreshing(false);
   };
 
   const openFilterDrawer = () => {
@@ -282,7 +285,32 @@ function NearbyIncidentsContent() {
       </div>
 
       {/* Incidents Feed */}
-      {filteredIncidents.length === 0 ? (
+      {isLoading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map((idx) => (
+            <div
+              key={idx}
+              className="p-2 rounded-[2.5rem] bg-black/5 border border-black/5 animate-pulse"
+            >
+              <div className="bg-white rounded-[calc(2.5rem-0.5rem)] p-6 sm:p-8 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="h-6 w-36 bg-black/5 rounded-full" />
+                  <div className="h-6 w-24 bg-black/5 rounded-full" />
+                </div>
+                <div className="h-6 w-3/4 bg-black/5 rounded-lg" />
+                <div className="space-y-2">
+                  <div className="h-4 w-full bg-black/5 rounded-lg" />
+                  <div className="h-4 w-5/6 bg-black/5 rounded-lg" />
+                </div>
+                <div className="pt-4 border-t border-[#F5F5F4] flex items-center justify-between">
+                  <div className="h-4 w-32 bg-black/5 rounded-md" />
+                  <div className="h-8 w-28 bg-black/5 rounded-full" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : filteredIncidents.length === 0 ? (
         <div className="p-2 rounded-[2.5rem] bg-black/5 border border-black/5">
           <div className="bg-white rounded-[calc(2.5rem-0.5rem)] p-12 text-center space-y-4">
             <SlidersHorizontal className="w-10 h-10 text-[#A8A29E] mx-auto" />

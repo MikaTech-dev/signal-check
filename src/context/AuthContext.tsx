@@ -12,8 +12,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   isSuspended: boolean;
-  login: (payload: { email: string; password?: string }) => Promise<void>;
-  register: (payload: { name: string; email: string; phone: string; password?: string }) => Promise<void>;
+  login: (payload: { email: string; password?: string }, redirectUrl?: string) => Promise<void>;
+  register: (payload: { name: string; email: string; phone: string; password?: string }, redirectUrl?: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
 }
@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (res.success && res.data) {
         setUser(res.data);
         setIsSuspended(res.data.status === 'SUSPENDED');
-        signalStore.switchRole(res.data.role as UserRole);
+        signalStore.setCurrentUser(res.data);
       } else {
         setUser(null);
         setIsSuspended(false);
@@ -62,16 +62,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshSession();
   }, [handleUnauthorized, refreshSession]);
 
-  const login = async (payload: { email: string; password?: string }) => {
+  const login = async (payload: { email: string; password?: string }, redirectUrl?: string) => {
     setIsLoading(true);
     try {
       const res = await authApi.login(payload);
       if (res.success && res.data?.user) {
         setUser(res.data.user);
         setIsSuspended(res.data.user.status === 'SUSPENDED');
-        signalStore.switchRole(res.data.user.role as UserRole);
+        signalStore.setCurrentUser(res.data.user);
         toast.success(`Welcome back, ${res.data.user.name}`);
-        router.push('/nearby');
+        router.push(redirectUrl || '/nearby');
       }
     } catch (err: unknown) {
       const typedErr = err as { statusCode?: number; message?: string };
@@ -91,23 +91,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const register = async (payload: {
-    name: string;
-    email: string;
-    phone: string;
-    password?: string;
-  }) => {
+  const register = async (
+    payload: {
+      name: string;
+      email: string;
+      phone: string;
+      password?: string;
+    },
+    redirectUrl?: string
+  ) => {
     setIsLoading(true);
     try {
       const res = await authApi.register(payload);
       if (res.success && res.data?.user) {
         setUser(res.data.user);
         setIsSuspended(res.data.user.status === 'SUSPENDED');
-        signalStore.switchRole(res.data.user.role as UserRole);
+        signalStore.setCurrentUser(res.data.user);
         toast.success('Account created successfully', {
-          description: 'Welcome to SignalNG crisis triage network.',
+          description: 'Welcome to the SignalNG incident network.',
         });
-        router.push('/nearby');
+        router.push(redirectUrl || '/nearby');
       }
     } catch (err: unknown) {
       const typedErr = err as { statusCode?: number; message?: string };
@@ -130,6 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setIsSuspended(false);
       setIsLoading(false);
+      signalStore.resetToDefaultSeed();
       toast.info('Signed out successfully');
       router.replace('/login');
     }
