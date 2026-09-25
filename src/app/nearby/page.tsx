@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Incident } from '@/types';
+import { Incident, Attestation } from '@/types';
 import { signalStore } from '@/lib/store';
 import { incidentsApi } from '@/lib/api';
 import { calculateHaversineDistance } from '@/lib/haversine';
@@ -57,27 +57,70 @@ function NearbyIncidentsContent() {
         maxDistanceKm
       );
       if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-        const normalized = res.data.map((item) => ({
-          ...item,
-          coordinates: item.coordinates || {
-            latitude: item.latitude || 0,
-            longitude: item.longitude || 0,
-          },
-          firstReportedAt: item.firstReportedAt || item.createdAt || new Date().toISOString(),
-          lastReaffirmedAt: item.lastReaffirmedAt || item.updatedAt || new Date().toISOString(),
-          expiresAt: item.expiresAt || new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-          reportCount: item.reportCount || 1,
-          firsthandCount: item.firsthandCount || 0,
-          contradictionCount: item.contradictionCount || 0,
-          hearsayCount: item.hearsayCount || 0,
-          supportingFacts: item.supportingFacts || (item.summary ? [item.summary] : []),
-          contradictingFacts: item.contradictingFacts || [],
-          missingDetails: item.missingDetails || [],
-          suggestedVerificationChecks: item.suggestedVerificationChecks || [],
-          synthesisSummary: item.synthesisSummary || item.summary || '',
-          convergenceStatus: item.convergenceStatus || 'STATIC',
-          triageStatus: item.triageStatus || 'ACTIVE_ALERT',
-        }));
+        const normalized = await Promise.all(
+          res.data.map(async (item) => {
+            let attestations: Attestation[] = [];
+            try {
+              const attRes = await incidentsApi.getAttestations(item.id);
+              if (attRes.success && Array.isArray(attRes.data)) {
+                attestations = attRes.data;
+              }
+            } catch {
+              // API fallback
+            }
+            const localAtts = signalStore.getAttestationsForIncident(item.id);
+            localAtts.forEach((loc) => {
+              if (!attestations.some((a) => a.id === loc.id)) {
+                attestations.push(loc);
+              }
+            });
+
+            const calculatedFirsthand = attestations.filter(
+              (a) => (a.action || a.type) === 'FIRSTHAND_WITNESS'
+            ).length;
+            const calculatedContradiction = attestations.filter(
+              (a) => (a.action || a.type) === 'ACTIVE_CONTRADICTION'
+            ).length;
+            const calculatedHearsay = attestations.filter(
+              (a) => (a.action || a.type) === 'HEARSAY_TRACKING'
+            ).length;
+
+            const firsthandCount = Math.max(item.firsthandCount || 0, calculatedFirsthand);
+            const contradictionCount = Math.max(item.contradictionCount || 0, calculatedContradiction);
+            const hearsayCount = Math.max(item.hearsayCount || 0, calculatedHearsay);
+
+            let summaryText = item.summary || item.synthesisSummary || '';
+            if (!summaryText && attestations.length > 0) {
+              const latestAtt = attestations[0];
+              const latestComment = latestAtt.comment || latestAtt.observation || latestAtt.contradictionDetails;
+              if (latestComment) {
+                summaryText = `Latest report: "${latestComment}"`;
+              }
+            }
+
+            return {
+              ...item,
+              coordinates: item.coordinates || {
+                latitude: item.latitude || 0,
+                longitude: item.longitude || 0,
+              },
+              firstReportedAt: item.firstReportedAt || item.createdAt || new Date().toISOString(),
+              lastReaffirmedAt: item.lastReaffirmedAt || item.updatedAt || new Date().toISOString(),
+              expiresAt: item.expiresAt || new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+              reportCount: item.reportCount || Math.max(1, attestations.length),
+              firsthandCount,
+              contradictionCount,
+              hearsayCount,
+              supportingFacts: item.supportingFacts || (item.summary ? [item.summary] : []),
+              contradictingFacts: item.contradictingFacts || [],
+              missingDetails: item.missingDetails || [],
+              suggestedVerificationChecks: item.suggestedVerificationChecks || [],
+              synthesisSummary: summaryText,
+              convergenceStatus: item.convergenceStatus || (contradictionCount > 0 ? 'DIVERGING' : 'STATIC'),
+              triageStatus: item.triageStatus || 'ACTIVE_ALERT',
+            };
+          })
+        );
         setIncidents(normalized);
         if (deepLinkedIncidentId) {
           const found = normalized.find((i) => i.id === deepLinkedIncidentId);
@@ -91,7 +134,25 @@ function NearbyIncidentsContent() {
       setIsLoading(false);
     }
 
-    const list = signalStore.getIncidents();
+    const list = signalStore.getIncidents().map((item) => {
+      const attestations = signalStore.getAttestationsForIncident(item.id);
+      const calculatedFirsthand = attestations.filter(
+        (a) => (a.action || a.type) === 'FIRSTHAND_WITNESS'
+      ).length;
+      const calculatedContradiction = attestations.filter(
+        (a) => (a.action || a.type) === 'ACTIVE_CONTRADICTION'
+      ).length;
+      const calculatedHearsay = attestations.filter(
+        (a) => (a.action || a.type) === 'HEARSAY_TRACKING'
+      ).length;
+
+      return {
+        ...item,
+        firsthandCount: Math.max(item.firsthandCount || 0, calculatedFirsthand),
+        contradictionCount: Math.max(item.contradictionCount || 0, calculatedContradiction),
+        hearsayCount: Math.max(item.hearsayCount || 0, calculatedHearsay),
+      };
+    });
     setIncidents(list);
     if (deepLinkedIncidentId) {
       const found = list.find((i) => i.id === deepLinkedIncidentId);

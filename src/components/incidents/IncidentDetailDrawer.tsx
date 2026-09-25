@@ -200,6 +200,10 @@ export function IncidentDetailDrawer({
     (a) => (a.action || a.type) === 'HEARSAY_TRACKING'
   );
 
+  const firsthandCount = Math.max(currentIncident.firsthandCount || 0, firsthandList.length);
+  const contradictionCount = Math.max(currentIncident.contradictionCount || 0, contradictionList.length);
+  const hearsayCount = Math.max(currentIncident.hearsayCount || 0, hearsayList.length);
+
   const filteredAttestations = attestations.filter((a) => {
     if (attestationFilter === 'ALL') return true;
     return (a.action || a.type) === attestationFilter;
@@ -263,7 +267,7 @@ export function IncidentDetailDrawer({
               <div className="p-3 rounded-xl bg-white border border-[#E7E5E4]">
                 <div className="flex items-center justify-center gap-1.5 text-[#0A0A0A] font-bold text-base">
                   <Eye className="w-4 h-4 text-[#0A0A0A]" />
-                  <span>{currentIncident.firsthandCount}</span>
+                  <span>{firsthandCount}</span>
                 </div>
                 <div className="text-[11px] text-[#737373] mt-1 font-medium">Firsthand</div>
               </div>
@@ -271,7 +275,7 @@ export function IncidentDetailDrawer({
               <div className="p-3 rounded-xl bg-white border border-[#E7E5E4]">
                 <div className="flex items-center justify-center gap-1.5 text-[#991B1B] font-bold text-base">
                   <ShieldAlert className="w-4 h-4 text-[#991B1B]" />
-                  <span>{currentIncident.contradictionCount}</span>
+                  <span>{contradictionCount}</span>
                 </div>
                 <div className="text-[11px] text-[#737373] mt-1 font-medium">Contradictions</div>
               </div>
@@ -279,7 +283,7 @@ export function IncidentDetailDrawer({
               <div className="p-3 rounded-xl bg-white border border-[#E7E5E4]">
                 <div className="flex items-center justify-center gap-1.5 text-[#57534E] font-bold text-base">
                   <MessageSquareQuote className="w-4 h-4 text-[#57534E]" />
-                  <span>{currentIncident.hearsayCount}</span>
+                  <span>{hearsayCount}</span>
                 </div>
                 <div className="text-[11px] text-[#737373] mt-1 font-medium">Hearsay Volume</div>
               </div>

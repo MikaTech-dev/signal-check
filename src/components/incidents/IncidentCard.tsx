@@ -149,28 +149,32 @@ export function IncidentCard({ incident, onClick }: IncidentCardProps) {
       </div>
 
       {/* Location */}
-      <p className="text-sm text-[#57534E] mb-4 flex items-center gap-1.5 font-medium">
+      <p className="text-sm text-[#57534E] mb-3 flex items-center gap-1.5 font-medium">
         <span className="text-[#737373]">Location:</span>
         <span className="text-[#0A0A0A]">{incident.locationLabel}</span>
       </p>
 
-      {/* Synthesis Summary */}
-      <p className="text-sm text-[#292524] bg-[#FAFAF9] border border-[#F5F5F4] p-4 rounded-2xl mb-5 leading-relaxed">
-        {incident.synthesisSummary}
-      </p>
+      {/* Synthesis Summary (only rendered if text exists) */}
+      {incident.synthesisSummary && (
+        <p className="text-sm text-[#292524] bg-[#FAFAF9] border border-[#F5F5F4] p-4 rounded-2xl mb-4 leading-relaxed">
+          {incident.synthesisSummary}
+        </p>
+      )}
 
       {/* Discrepancy Matrix Row */}
       <div className="flex flex-wrap items-center justify-between text-xs text-[#737373] pt-4 border-t border-[#F5F5F4] gap-3">
-        <div className="flex items-center gap-2 sm:gap-4 flex-wrap font-semibold">
-          <span className="inline-flex items-center gap-1.5 text-[#0A0A0A] bg-[#FAFAF9] border border-[#E7E5E4] px-2.5 py-1 rounded-lg">
-            <Eye className="w-3.5 h-3.5 text-[#0A0A0A]" />
-            <span>{incident.firsthandCount} Firsthand</span>
-          </span>
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap font-semibold">
+          {incident.firsthandCount > 0 && (
+            <span className="inline-flex items-center gap-1.5 text-[#0A0A0A] bg-[#FAFAF9] border border-[#E7E5E4] px-2.5 py-1 rounded-lg">
+              <Eye className="w-3.5 h-3.5 text-[#C7862B]" />
+              <span>{incident.firsthandCount} Eyewitness{incident.firsthandCount > 1 ? 'es' : ''}</span>
+            </span>
+          )}
 
           {incident.contradictionCount > 0 && (
             <span className="inline-flex items-center gap-1.5 text-[#991B1B] bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg font-bold">
               <ShieldAlert className="w-3.5 h-3.5" />
-              <span>{incident.contradictionCount} Contradiction</span>
+              <span>{incident.contradictionCount} Road Clear</span>
             </span>
           )}
 
@@ -178,6 +182,13 @@ export function IncidentCard({ incident, onClick }: IncidentCardProps) {
             <span className="inline-flex items-center gap-1.5 text-[#57534E] bg-[#FAFAF9] border border-[#E7E5E4] px-2.5 py-1 rounded-lg">
               <MessageSquareQuote className="w-3.5 h-3.5 text-[#78716C]" />
               <span>{incident.hearsayCount} Hearsay</span>
+            </span>
+          )}
+
+          {incident.firsthandCount === 0 && incident.contradictionCount === 0 && incident.hearsayCount === 0 && (
+            <span className="inline-flex items-center gap-1.5 text-[#737373] bg-[#FAFAF9] border border-[#E7E5E4] px-2.5 py-1 rounded-lg font-medium">
+              <Eye className="w-3.5 h-3.5 text-[#A8A29E]" />
+              <span>Awaiting ground observations</span>
             </span>
           )}
         </div>
