@@ -1,23 +1,28 @@
 import { NextResponse } from 'next/server';
-import { analyzeReportWithDeepSeek } from '@/lib/deepseek';
+import { auditReportWithDeepSeek } from '@/lib/deepseek';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { report } = body;
+    const { report, rawText, incidentType, locationLabel } = body;
+    const textToAudit = rawText || report;
 
-    if (!report || typeof report !== 'string' || report.trim().length === 0) {
+    if (!textToAudit || typeof textToAudit !== 'string' || textToAudit.trim().length === 0) {
       return NextResponse.json(
-        { error: 'Please provide a valid community report text.' },
+        { error: 'Please provide valid community report text.' },
         { status: 400 }
       );
     }
 
-    const analysis = await analyzeReportWithDeepSeek(report);
+    const triageAudit = await auditReportWithDeepSeek(
+      textToAudit,
+      incidentType || 'ROAD_OBSTRUCTION',
+      locationLabel || 'Nearby Landmark'
+    );
 
     return NextResponse.json({
       success: true,
-      analysis,
+      triageAudit,
     });
   } catch (error) {
     console.error('API route error in /api/analyze:', error);

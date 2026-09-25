@@ -1,57 +1,70 @@
 'use client';
 
 import React from 'react';
-import { ShieldCheck, Radio, Clock, AlertCircle } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
+import Link from 'next/link';
+import { ShieldCheck, Radio, Clock, ArrowLeft } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface HeaderProps {
   reportCount: number;
   unverifiedRumorCount: number;
   onOpenQuickReport: () => void;
+  showBackToLanding?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   reportCount,
   unverifiedRumorCount,
   onOpenQuickReport,
+  showBackToLanding = true,
 }) => {
   return (
-    <header className="border-b border-zinc-800 bg-zinc-950/90 sticky top-0 z-30 backdrop-blur-md">
+    <header className="border-b border-zinc-200/80 bg-white/95 sticky top-0 z-30 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-emerald-600/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
-            <ShieldCheck className="w-6 h-6" />
+          {showBackToLanding && (
+            <Link
+              href="/"
+              className="p-2 text-zinc-500 hover:text-purple-950 hover:bg-zinc-100 rounded-lg transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]"
+              aria-label="Back to landing page"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+          )}
+          <div className="w-9 h-9 rounded-lg bg-purple-950 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-xs">
+            SC
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white">
-                SafeRoute Signal
-              </h1>
-              <Badge variant="success" dot>
-                Live Filter Active
+              <span className="text-base sm:text-lg font-bold tracking-tight text-zinc-950">
+                Signal-check
+              </span>
+              <Badge variant="purple" dot>
+                Live DeepSeek Filter
               </Badge>
             </div>
-            <p className="text-xs text-zinc-400">
-              Real-time road verification for market vendors and transit safety
+            <p className="text-xs text-zinc-500">
+              Real-time transit verification for tense regional corridors
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-end">
-          <div className="flex items-center gap-2 text-xs text-zinc-300 bg-zinc-900 border border-zinc-800 px-3 py-2 rounded-lg">
-            <Clock className="w-3.5 h-3.5 text-amber-400" />
-            <span className="font-mono font-medium text-amber-300">6:40 PM</span>
+          <div className="flex items-center gap-2 text-xs text-zinc-700 bg-zinc-50 border border-zinc-200 px-3 py-2 rounded-lg">
+            <Clock className="w-3.5 h-3.5 text-purple-900" />
+            <span className="font-mono font-bold text-purple-950">6:40 PM</span>
             <span className="text-zinc-500 hidden md:inline">| Market Closing Window</span>
           </div>
 
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            size="sm"
             onClick={onOpenQuickReport}
-            className="inline-flex items-center gap-2 text-xs font-semibold px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white min-h-[44px] transition-colors focus-visible:outline-2 focus-visible:outline-emerald-500 shadow-sm"
+            leftIcon={<Radio className="w-3.5 h-3.5" />}
           >
-            <Radio className="w-3.5 h-3.5" />
-            <span>Test New Field Report</span>
-          </button>
+            Upload Field Report
+          </Button>
         </div>
       </div>
     </header>
